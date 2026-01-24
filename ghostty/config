@@ -1,0 +1,25 @@
+theme = adwaita dark
+window-colorspace = "display-p3"
+background = 21272b
+
+font-size = 18
+adjust-cell-height = 15%
+
+background-opacity = .95
+background-blur-radius = 20
+
+mouse-hide-while-typing = true
+
+macos-titlebar-style = hidden
+macos-titlebar-style = tabs
+macos-icon = custom-style
+macos-icon-frame = plastic
+macos-icon-ghost-color = 21272b
+macos-icon-screen-color = 000000
+
+window-padding-x = 7,12
+window-padding-y = 7,12
+
+keybind = alt+left=esc:B
+keybind = alt+right=esc:F
+keybind = cmd+backspace=esc:W

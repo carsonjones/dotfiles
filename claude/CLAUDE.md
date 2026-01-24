@@ -1,0 +1,1 @@
+- In all interactions and commit messages, be extremely concise and sacrafice grammar for sake of concision

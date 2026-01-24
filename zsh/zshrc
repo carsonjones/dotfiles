@@ -1,0 +1,232 @@
+########################################
+# ENVIRONMENT & PATH
+########################################
+
+# Homebrew (macos arm, macos intel, or linux)
+if [ -f /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -f /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+elif [ -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+# Consolidated PATH
+export PATH="\
+$HOME/.local/bin:\
+$HOME/.bun/bin:\
+/usr/local/bin:\
+/usr/bin:\
+/bin:\
+/usr/sbin:\
+/sbin:\
+$PATH"
+
+# Homebrew paths (added by brew shellenv above, but extras here)
+if command -v brew &>/dev/null; then
+    export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
+    [ -d "$(brew --prefix)/opt/postgresql@17/bin" ] && export PATH="$(brew --prefix)/opt/postgresql@17/bin:$PATH"
+fi
+
+# Go
+export GOPATH=$HOME/go
+if command -v brew &>/dev/null && [ -d "$(brew --prefix golang 2>/dev/null)/libexec" ]; then
+    export GOROOT="$(brew --prefix golang)/libexec"
+    export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
+elif [ -d "/usr/local/go" ]; then
+    export GOROOT="/usr/local/go"
+    export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
+fi
+
+# Python (macos)
+if [ -d "$HOME/Library/Python/3.10" ]; then
+    export PYTHONPATH="$HOME/Library/Python/3.10"
+    export PATH="$PATH:${PYTHONPATH}/bin"
+fi
+
+# pnpm
+export PNPM_HOME="$HOME/.local/share/pnpm"
+[ -d "$HOME/Library/pnpm" ] && export PNPM_HOME="$HOME/Library/pnpm"
+
+# Editor
+export EDITOR="nvim"
+
+########################################
+# POWERLEVEL10K INSTANT PROMPT
+########################################
+
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+
+########################################
+# ZINIT & PLUGINS
+########################################
+
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+
+# Download Zinit if not present
+if [ ! -d "$ZINIT_HOME" ]; then
+  mkdir -p "$(dirname $ZINIT_HOME)"
+  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
+
+source "${ZINIT_HOME}/zinit.zsh"
+
+# Plugins
+zinit ice depth=1; zinit light romkatv/powerlevel10k
+zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
+zinit light zsh-users/zsh-autosuggestions
+
+# OMZ snippets
+zinit snippet OMZP::git
+zinit snippet OMZP::command-not-found
+zinit snippet OMZP::node
+zinit snippet OMZP::sublime
+zinit snippet OMZP::npm
+zinit snippet OMZP::bun
+zinit snippet OMZP::brew
+
+autoload -Uz compinit && compinit
+zinit cdreplay -q
+
+# p10k config
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+########################################
+# SHELL CONFIGURATION
+########################################
+
+# History
+HISTSIZE=5000
+HISTFILE=~/.zsh_history
+SAVEHIST=$HISTSIZE
+HISTDUP=erase
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+# Keybindings
+bindkey '^p' history-search-backward
+bindkey '^n' history-search-forward
+
+# Completion styling
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+
+########################################
+# TOOL INITIALIZATIONS
+########################################
+
+# rbenv
+if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+
+# pyenv
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
+
+# fzf
+command -v fzf &>/dev/null && eval "$(fzf --zsh)"
+
+# rust
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+# zoxide
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# local bin
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+########################################
+# ALIASES
+########################################
+
+## General
+alias ls='ls -G'
+alias zsh="subl ~/.zshrc"
+alias savezsh="source ~/.zshrc"
+alias edit="zed"
+alias cc="claude"
+
+## macOS
+alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
+alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+
+## Navigation - Projects
+alias src="cd ~/src"
+alias main="cd ~/main"
+
+## Git
+alias git=hub
+alias removegit="rm -R .git"
+alias gadd="git add ."
+alias gcm="git commit -m"
+alias gav="git add . && git commit -v"
+alias gpo="git pull origin"
+alias gpom="git pull origin master"
+alias gpu="git push -u origin"
+alias gitlocalignore="subl .git/info/exclude"
+alias co="git checkout"
+alias cosafe="python scripts/get_last_release_migration.py | xargs -I {} python manage.py migrate main {} && git checkout"
+alias oops="git add . && fc -e : -1"
+alias ammend="git commit --ammend"
+alias gitbranches='for remote in `git branch -r`; do git branch --track ${remote#origin/} $remote; done'
+alias recent="git for-each-ref --sort=-committerdate --count=10 --format='%(committerdate:relative) %(refname:short)' refs/heads/"
+alias gitclean='git branch --merged | grep -v "\*" | grep -v "master" | grep -v "develop" | grep -v "staging" | xargs -n 1 git branch -d'
+alias gitbranch="git for-each-ref --format='%(committerdate) %09 %(authorname) %09 %(refname)' | sort -k5n -k2M -k3n -k4n"
+alias conflicts='git diff --name-only --diff-filter=U'
+
+## Python
+alias python2=python2
+alias python=python3
+alias pt='pytest --reuse-db'
+alias ptx='pt -n auto --dist loadgroup'
+alias ptk='pytest --reuse-db -n 0 -k'
+alias ptl="pytest 2>&1 | tee test-log-$(date +%Y-%m-%d).log"
+
+## Config files (macos)
+alias ghostty-config='subl "$HOME/Library/Application Support/com.mitchellh.ghostty/config"'
+alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_desktop_config.json"'
+
+## Tools
+alias z="zoxide"
+
+########################################
+# FUNCTIONS
+########################################
+
+getCurrentBranch() {
+  local current_branch_name=$(git symbolic-ref -q HEAD)
+  local current_branch_name=${current_branch_name##refs/heads/}
+  local current_branch_name=${current_branch_name:-HEAD}
+  echo $current_branch_name
+}
+
+alias pushit='git push origin $(getCurrentBranch)'
+alias pullit='git pull origin $(getCurrentBranch)'
+
+if [ -n "$ZSH_VERSION" ]; then
+  precmd_functions+=(set_name)
+elif [ -n "$BASH_VERSION" ]; then
+  PROMPT_COMMAND='set_name'
+fi
+
+########################################
+# LOCAL OVERRIDES
+########################################
+
+# Source local config for sensitive values and machine-specific settings
+[ -f ~/.zshrc.local ] && source ~/.zshrc.local

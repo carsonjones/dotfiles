@@ -1,0 +1,5 @@
+*.local
+**/mcp.json
+!mcp.json.template
+.DS_Store
+nvim/.nvimlog

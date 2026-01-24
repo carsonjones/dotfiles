@@ -1,0 +1,8 @@
+# Copy to ~/.zshrc.local and fill in values
+
+# API Keys
+export BRAVE_API_KEY=""
+export FIRECRAWL_API_KEY=""
+
+# Database
+export POSTGRES_URL="postgresql://user:pass@localhost:5432/db"

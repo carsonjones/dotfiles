@@ -1,0 +1,172 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run the `open default settings` command
+// from the command palette or from `Zed` application menu.
+{
+  "tab_size": 2,
+  "when_closing_with_no_tabs": "keep_window_open",
+  "format_on_save": "on",
+  "horizontal_scroll_margin": 5.0,
+  "preferred_line_length": 80,
+  "show_wrap_guides": false,
+  "agent_buffer_font_size": 16.0,
+  "agent_ui_font_size": 18.0,
+  "agent": {
+    "default_profile": "write",
+    "always_allow_tool_actions": true,
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5-latest"
+    },
+    "model_parameters": []
+  },
+  "prettier": {
+    "allowed": true
+  },
+  "theme": "One Dark Pro",
+  "icon_theme": "Symbols Icon Theme",
+  "base_keymap": "VSCode",
+  "vim_mode": false,
+  // "features": {
+  //   "edit_prediction_provider": "none"
+  // },
+  "buffer_font_size": 18.0,
+  "buffer_font_family": "TX-02",
+  "buffer_font_weight": 450.0,
+  "buffer_line_height": {
+    "custom": 1.7599999904632568
+  },
+  "ui_font_family": "TX-02",
+  "ui_font_size": 16,
+  "unnecessary_code_fade": 0.3,
+  "active_pane_modifiers": {
+    "border_size": 0.0,
+    "inactive_opacity": 0.95
+  },
+  "ensure_final_newline_on_save": true,
+  "allow_rewrap": "anywhere",
+  "soft_wrap": "editor_width",
+  "project_panel": {
+    "auto_reveal_entries": true,
+    "button": false,
+    "dock": "left",
+    "entry_spacing": "standard",
+    "file_icons": true,
+    "folder_icons": true,
+    "git_status": true,
+    "hide_root": true,
+    "indent_guides": {
+      "show": "always"
+    },
+    "indent_size": 8,
+    "sort_mode": "directories_first",
+    "sticky_scroll": true,
+  },
+  "tabs": {
+    "git_status": true
+  },
+  "terminal": {
+    "font_size": 18,
+    "default_height": 100,
+    "button": true,
+    "line_height": "comfortable",
+    "font_family": "TX-02"
+  },
+  "gutter": {},
+  "toolbar": {
+    "breadcrumbs": false,
+    "quick_actions": false
+  },
+  "notification_panel": {
+    "button": false
+  },
+  "diagnostics": {
+    "include_warnings": false,
+    "button": false
+  },
+  "collaboration_panel": {
+    "button": false
+  },
+  "outline_panel": {
+    "folder_icons": true,
+    "file_icons": true,
+    "button": false
+  },
+  "edit_predictions": {
+    "mode": "eager"
+  },
+  "inlay_hints": {
+    "enabled": false
+  },
+  "lsp": {
+    "tailwindcss-language-server": {
+      "settings": {
+        "classAttributes": ["class", "className", "ngClass", "styles"]
+      }
+    },
+    "python": {
+      "settings": {
+        "python.pythonPath": "./.venv/bin/python"
+      }
+    },
+    "ruff": {
+      "initialization_options": {
+        "settings": {
+          "lineLength": 80,
+          "lint": {
+            "extendSelect": ["I"]
+          }
+        }
+      }
+    }
+  },
+  "languages": {
+    // Refer https://zed.dev/docs/languages/javascript and https://zed.dev/docs/languages/typescript for more info
+    "TypeScript": {
+      // Refer https://github.com/jellydn/ts-inlay-hints for how to setup for Neovim and VSCode
+      "inlay_hints": {
+        "enabled": false,
+        "show_parameter_hints": false,
+        "show_other_hints": true,
+        "show_type_hints": true
+      }
+    },
+    "Python": {
+      "formatter": { "language_server": { "name": "ruff" } },
+      "language_servers": ["ruff"]
+    }
+  },
+  "formatter": {
+    "external": {
+      "command": "biome",
+      "arguments": ["--stdin-filepath", "{buffer_path}"]
+    }
+  },
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    // above is default from Zed
+    "**/out",
+    "**/dist",
+    "**/.husky",
+    "**/.turbo",
+    "**/.vscode-test",
+    "**/.vscode",
+    "**/.next",
+    "**/.storybook",
+    "**/.tap",
+    "**/.nyc_output",
+    "**/report",
+    "**/node_modules"
+  ]
+}

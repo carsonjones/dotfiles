@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "brave-search": {
+      "command": "env",
+      "args": [
+        "BRAVE_API_KEY=${BRAVE_API_KEY}",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "${POSTGRES_URL}"
+      ]
+    },
+    "browsertools": {
+      "command": "npx",
+      "args": [
+        "@agentdeskai/browser-tools-mcp@1.2.0"
+      ]
+    },
+    "firecrawl": {
+      "command": "env",
+      "args": [
+        "FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}",
+        "npx",
+        "-y",
+        "firecrawl-mcp"
+      ]
+    }
+  }
+}
