@@ -1,0 +1,22 @@
+// documentation: https://zed.dev/docs/key-bindings
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      // "shift shift": "file_finder::Toggle"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "cmd-alt-l": "editor::SplitSelectionIntoLines"
+      // "j k": ["workspace::SendKeystrokes", "escape"]
+    }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "alt-shift-v": "workspace::ToggleVimMode"
+    }
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "lastChangelogVersion": "0.84.2",
+  "packages": [
+    "npm:pi-rewind-hook",
+    "npm:pi-web-access",
+    "npm:pi-lsp-extension"
+  ],
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-5.6-sol",
+  "theme": "dark"
+}

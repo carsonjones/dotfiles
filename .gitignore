@@ -1,0 +1,19 @@
+*.local
+claude/settings.local.json
+herdr/config.local.toml
+node_modules/
+**/mcp.json
+!mcp.json.template
+.DS_Store
+__pycache__/
+*.pyc
+nvim/.nvimlog
+nvim/lazy-lock.json
+.nvimlog
+nvim.log
+scripts/picker/dotfiles-picker
+
+# herdr plugins fetched from GitHub — each is its own git repo (nested .git),
+# reproducible via `herdr plugin install` (see scripts/install.sh). Don't vendor.
+herdr/plugins/github/
+herdr/plugins/.tmp-install-*/

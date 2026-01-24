@@ -1,0 +1,11 @@
+id = "local.sort_tabs"
+name = "Sort Tabs"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Sort tabs in the current workspace A–Z by label."
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "sort"
+title = "Sort tabs A–Z"
+command = ["bun", "sort-tabs.ts"]

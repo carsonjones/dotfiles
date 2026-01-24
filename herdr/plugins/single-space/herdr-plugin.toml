@@ -1,0 +1,11 @@
+id = "local.single_space"
+name = "Single Space"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Move every pane from every other workspace into the current workspace, each as its own tab."
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "collect"
+title = "Collect all panes into current space"
+command = ["python3", "collect.py"]

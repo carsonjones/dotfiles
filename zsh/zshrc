@@ -1,0 +1,681 @@
+########################################
+# ENVIRONMENT & PATH
+########################################
+
+# Homebrew (macos arm, macos intel, or linux)
+if [ -f /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -f /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+elif [ -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+# Consolidated PATH
+export PATH="\
+$HOME/bin:\
+$HOME/.local/bin:\
+$HOME/.bun/bin:\
+$PATH:\
+/usr/local/bin:\
+/usr/bin:\
+/bin:\
+/usr/sbin:\
+/sbin"
+#$HOME.local/share/mise/shims:
+
+# Keep PATH entries unique; otherwise `which -a` shows the same binary twice
+# when the inherited PATH already contains one of the entries above.
+typeset -U path PATH
+
+# Keep zsh-histdb's internal sqlite calls off wrapper/shim paths.
+sqlite3() {
+  local sqlite_bin
+
+  for sqlite_bin in \
+    /opt/homebrew/opt/sqlite/bin/sqlite3 \
+    /usr/local/opt/sqlite/bin/sqlite3 \
+    /usr/bin/sqlite3
+  do
+    if [[ -x "$sqlite_bin" ]]; then
+      command "$sqlite_bin" "$@"
+      return $?
+    fi
+  done
+
+  sqlite_bin="$(whence -p sqlite3 2>/dev/null)" || return 127
+  command "$sqlite_bin" "$@"
+}
+
+# Homebrew paths (added by brew shellenv above, but extras here)
+if command -v brew &>/dev/null; then
+    export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
+fi
+
+# Go
+export GOPATH=$HOME/go
+if command -v brew &>/dev/null && [ -d "$(brew --prefix golang 2>/dev/null)/libexec" ]; then
+    export GOROOT="$(brew --prefix golang)/libexec"
+    export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
+elif [ -d "/usr/local/go" ]; then
+    export GOROOT="/usr/local/go"
+    export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
+fi
+
+# pnpm
+export PNPM_HOME="$HOME/.local/share/pnpm"
+[ -d "$HOME/Library/pnpm" ] && export PNPM_HOME="$HOME/Library/pnpm"
+
+# Editor
+export EDITOR="nvim"
+export NVIM=~/.cache/nvim/server.pipe
+alias v='nvim'
+
+unalias vf 2>/dev/null
+vf() {
+  local selected
+
+  if (( $# == 0 )) || [[ "$1" == -* ]]; then
+    selected="$(fzf "$@")"
+  else
+    selected="$(fzf -q "$*")"
+  fi
+
+  [[ -n "$selected" ]] && nvim --server "$NVIM" --remote-tab "$selected"
+}
+
+unalias scratch 2>/dev/null
+scratch() {
+  local date="$(date +%Y-%m-%d)"
+  local file="$HOME/main/scratch/${date}${1:+-${1}}.md"
+  mkdir -p "$HOME/main/scratch"
+  nvim "$file"
+}
+
+########################################
+# POWERLEVEL10K INSTANT PROMPT
+########################################
+
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+
+########################################
+# ZINIT & PLUGINS
+########################################
+
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+
+# Download Zinit if not present
+if [ ! -d "$ZINIT_HOME" ]; then
+  mkdir -p "$(dirname $ZINIT_HOME)"
+  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
+
+source "${ZINIT_HOME}/zinit.zsh"
+
+# Plugins
+zinit ice depth=1; zinit light romkatv/powerlevel10k
+zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
+zinit light zsh-users/zsh-autosuggestions
+# zsh-histdb shells out to the sqlite3 BINARY on load. Because we define a
+# sqlite3() wrapper function above, `command -v sqlite3` is ALWAYS true — so use
+# `whence -p` (external commands only) to detect a real binary and skip histdb
+# where none exists (e.g. --slim ), avoiding migration errors.
+whence -p sqlite3 &>/dev/null && zinit light larkery/zsh-histdb
+
+# OMZ snippets
+zinit snippet OMZP::git
+zinit snippet OMZP::command-not-found
+zinit snippet OMZP::node
+zinit snippet OMZP::sublime
+zinit snippet OMZP::npm
+zinit snippet OMZP::bun
+zinit snippet OMZP::brew
+
+autoload -Uz compinit && compinit
+zinit cdreplay -q
+
+# p10k config
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+########################################
+# SHELL CONFIGURATION
+########################################
+
+# History
+HISTSIZE=5000
+HISTFILE=~/.zsh_history
+SAVEHIST=$HISTSIZE
+HISTDUP=erase
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+# Keybindings
+bindkey '^p' history-search-backward
+bindkey '^n' history-search-forward
+
+# Completion styling
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+
+########################################
+# TOOL INITIALIZATIONS
+########################################
+
+# rbenv
+if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+
+# pyenv
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
+
+# fzf
+command -v fzf &>/dev/null && eval "$(fzf --zsh)"
+# Use fd as fzf's source: respects .gitignore, includes hidden, skips .git.
+# Drives Ctrl-T, the **<TAB>** completions, and the yazi fzf-root plugin.
+if command -v fd &>/dev/null; then
+	export FZF_DEFAULT_COMMAND='fd --type f --type d --hidden --follow --exclude .git'
+	export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+
+# rust
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# local bin
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+typeset -U path PATH
+
+typeset -g DOTFILES_ROOT="${DOTFILES:-${${(%):-%x}:A:h:h}}"
+
+########################################
+# ALIASES
+########################################
+
+## General
+# vim :qa ("quit all") -> close the whole herdr tab; plain exit elsewhere.
+__herdr_close_tab() {
+  if [[ -n "${HERDR_ENV:-}" && -n "${HERDR_TAB_ID:-}" ]] && command -v herdr >/dev/null 2>&1; then
+    herdr tab close "$HERDR_TAB_ID" >/dev/null 2>&1
+    return $?
+  fi
+  builtin exit "$@"
+}
+
+alias ls='ls -G'
+alias hist='histdb'
+alias zsh="nvim ~/.zshrc"
+alias zshlocal="nvim ~/.zshrc.local"
+alias savezsh="source ~/.zshrc"
+# Remove stale Zinit completion links and rebuild Zsh's completion cache.
+zsh-repair() {
+  zinit cclear
+  rm -f "${ZDOTDIR:-$HOME}"/.zcompdump*(N)
+  autoload -Uz compinit && compinit
+  zinit cdreplay -q
+  print "Zsh completions repaired."
+}
+alias fixzsh='zsh-repair'
+alias edit="zed"
+alias cc="claude"
+cc-color() {
+  local colors=(red blue green yellow purple orange pink cyan)
+  local color=${colors[$((RANDOM % ${#colors[@]}))]}
+  printf '/color %s\n' "$color" | claude "$@"
+}
+# herdr pane/agent -> its Claude Code transcript jsonl
+#   htx              pick an agent via fzf, open its transcript
+#   htx <target>     resolve a specific pane id / agent name
+#   htx -p [target]  just print the jsonl path
+htx() {
+  local print_only=0
+  [[ "$1" == "-p" ]] && { print_only=1; shift; }
+  local target="$1" uuid file
+  if [[ -z "$target" ]]; then
+    target=$(herdr agent list 2>/dev/null \
+      | jq -r '.result.agents[] | [.pane_id, .agent, .agent_status, (.agent_session.value // "-"), .cwd] | @tsv' \
+      | fzf --with-nth=1,2,3,5 --header=$'pane\tagent\tstatus\tcwd' \
+      | cut -f1)
+    [[ -z "$target" ]] && return 1
+  fi
+  uuid=$(herdr agent get "$target" 2>/dev/null \
+    | jq -r '.result.pane.agent_session.value // .result.agent.agent_session.value // empty')
+  [[ -z "$uuid" ]] && { echo "htx: no agent_session for '$target'" >&2; return 1; }
+  file=$(find ~/.claude/projects -name "$uuid.jsonl" 2>/dev/null | head -1)
+  [[ -z "$file" ]] && { echo "htx: no transcript for $uuid" >&2; return 1; }
+  (( print_only )) && { print -r -- "$file"; return 0; }
+  ${EDITOR:-nvim} "$file"
+}
+# Hunk diff viewer: inline `c` notes live only in the daemon's memory and vanish
+# when the session closes. For review subcommands, drain them into the
+# comments.nvim queue on an interval while the TUI is live (see hunk-sync.py),
+# with a final sweep on exit. Non-review subcommands pass straight through.
+hunk() {
+  local sync=~/.agents/skills/comments/hunk-sync.py
+  case "$1" in
+    diff|show|stash|patch|difftool|pager)
+      if [[ -x "$sync" ]]; then
+        # --clear = receiving agent archives addressed comments when done;
+        # drop it from dflags to keep the queue until cleared by hand
+        local -a dflags=(--dispatch --clear)
+        "$sync" watch $dflags >/dev/null 2>&1 &!
+        local watcher=$!
+        command hunk "$@"
+        local rc=$?
+        kill "$watcher" 2>/dev/null
+        "$sync" pull $dflags >/dev/null 2>&1
+        return $rc
+      fi
+      ;;
+  esac
+  command hunk "$@"
+}
+# Format HTML (and friends) in place via prettier, on demand
+htmlfmt() {
+  [[ -z "$1" ]] && { echo "usage: htmlfmt <file>..." >&2; return 1; }
+  npx --yes prettier --write --tab-width 2 "$@"
+}
+alias edit-config="nvim ~/.config"
+alias oc="opencode"
+alias :q="exit"
+alias :Q="exit"
+alias :qa="__herdr_close_tab"
+alias :QA="__herdr_close_tab"
+# alias review='git diff | comview'
+# alias review-staged='git diff --staged | comview'
+hunk_preferences="--wrap --mode auto --transparent-bg --theme one-dark-pro --no-hunk-headers"
+alias review="hunk diff $hunk_preferences"
+alias review-staged="hunk diff --staged $hunk_preferences"
+alias ccyp="claude --dangerously-skip-permissions -p"
+alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
+alias eqp='nvim ~/src/scripts/quick-prompt.md'
+
+## macOS
+alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
+alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+display-layout() {
+  bun "$DOTFILES_ROOT/scripts/display-layout.ts" "$@"
+}
+alias dl='display-layout toggle'
+
+ai-usage() {
+  bun "$DOTFILES_ROOT/scripts/ai-usage.ts" "$@"
+}
+alias usage='ai-usage'
+alias headroom='ai-usage'
+
+## Navigation - Projects
+alias src="cd ~/src"
+alias main="cd ~/main"
+alias artifacts="cd ~/main/artifacts"
+alias vibes=artifacts
+alias jonze="cd ~/src/jonze"
+alias dotfiles="cd $DOTFILES_ROOT"
+alias dots="dotfiles"
+alias config="cd ~/.config"
+
+## Git
+alias gadd="git add ."
+alias gcm="git commit -m"
+alias gav="git add . && git commit -v"
+alias gpo="git pull origin"
+alias gpom="git pull origin master"
+alias gpu="git push -u origin"
+alias co="gco"
+alias gitlocalignore="subl .git/info/exclude"
+alias co="git checkout"
+alias oops="git add . && fc -e : -1"
+alias ammend="git commit --ammend"
+alias gitbranches='for remote in `git branch -r`; do git branch --track ${remote#origin/} $remote; done'
+alias recent="git for-each-ref --sort=-committerdate --count=10 --format='%(committerdate:relative) %(refname:short)' refs/heads/"
+alias gitclean='git branch --merged | grep -v "\*" | grep -v "master" | grep -v "develop" | grep -v "staging" | xargs -n 1 git branch -d'
+alias gitbranch="git for-each-ref --format='%(committerdate) %09 %(authorname) %09 %(refname)' | sort -k5n -k2M -k3n -k4n"
+alias conflicts='git diff --name-only --diff-filter=U'
+
+# Fetch origin/<branch> and check it out (creates a local tracking branch if needed,
+# fast-forwards an existing local branch when possible).
+gfco() {
+  local branch="$1"
+  if [[ -z "$branch" ]]; then
+    echo "usage: gfco <branch>" >&2
+    return 1
+  fi
+  git fetch origin "$branch" || return
+  git checkout "$branch" || return
+  git merge --ff-only "origin/$branch"
+}
+
+## search branches (local + remote) with fzf (overrides OMZ `gb` alias)
+unalias gb 2>/dev/null
+gb() {
+  local branch
+  branch=$(git branch -a --format='%(refname:short)' \
+    | sed 's#^origin/##' | sort -u \
+    | fzf --preview 'git log {} --oneline --graph --color=always -n 10' \
+          --header 'Checkout Branch' \
+          --query "$*" \
+          --height 50% --layout=reverse --border) || return
+  [[ -n "$branch" ]] && git checkout "$branch"
+}
+
+## Python
+alias python2=python2
+
+## Config files (macos)
+alias ghostty-config='subl "$HOME/Library/Application Support/com.mitchellh.ghostty/config"'
+alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_desktop_config.json"'
+
+## Tools
+alias lg="lazygit"
+alias nv='nvim'
+alias nvd='nvim $(git diff --name-only HEAD)'
+alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
+alias te="economist"
+alias tb="trailboss"
+alias hd="herdr"
+alias yy="yazi"
+alias yz="yazi"
+# _sfw() { command sfw "$@" 2> >(grep -v "Warning: Socket Firewall did not detect any package fetch" >&2); }
+# alias npm="_sfw npm"
+# alias npx="_sfw npx"
+# alias pnpm="_sfw pnpm"
+# alias pnpx="_sfw pnpx"
+# alias yarn="_sfw yarn"
+# alias bun="_sfw bun"
+alias comments="uv run ~/src/dotfiles/agents/skills/comments/comments.py"
+
+# The ChatGPT app ships its own codex binary and ~/.codex/config.toml is written
+# for it, pointing notify + a couple MCP servers at /Applications paths. Prefer
+# that binary when it's there; otherwise fall back to the CLI on PATH and turn
+# off the app-only keys at invocation, so the config file stays mac-complete.
+CODEX_APP="/Applications/ChatGPT.app/Contents/Resources/codex"
+codex() {
+  if [[ -x $CODEX_APP ]]; then
+    command "$CODEX_APP" "$@"
+    return $?
+  fi
+
+  local cli_bin
+  if ! cli_bin=$(whence -p codex); then
+    echo "codex: no ChatGPT.app and no codex on PATH; install with: npm i -g @openai/codex" >&2
+    return 127
+  fi
+
+  # Codex vendors its own bwrap; prepend it so the CLI stops warning about a
+  # missing sandbox. :A resolves the npm shim symlink, :h:h climbs to the package
+  # root, (N) makes a non-match expand to nothing instead of erroring.
+  local -a vendored
+  vendored=("${cli_bin:A:h:h}"/node_modules/@openai/codex-linux-*/vendor/*/codex-resources(N))
+  local PATH="$PATH"
+  if (( $#vendored )) && [[ -x ${vendored[1]}/bwrap ]]; then
+    PATH="${vendored[1]}:$PATH"
+  fi
+
+  command "$cli_bin" \
+    -c 'notify=[]' \
+    -c 'mcp_servers.node_repl.enabled=false' \
+    -c 'mcp_servers.computer-use.enabled=false' \
+    "$@"
+}
+
+rename-tab() {
+  if (( $# == 0 )); then
+    echo "Usage: herdr-rename <LABEL...>" >&2
+    return 2
+  fi
+
+  local tab_id
+  if ! tab_id=$(
+    herdr tab list |
+      jq -er 'first(.result.tabs[] | select(.focused) | .tab_id)'
+  ); then
+    echo "Could not find the focused herdr tab" >&2
+    return 1
+  fi
+
+  herdr tab rename "$tab_id" "$@"
+}
+
+########################################
+# FUNCTIONS
+########################################
+
+__copy_to_clipboard() {
+  if command -v pbcopy >/dev/null 2>&1; then
+    printf '%s' "$1" | pbcopy
+  elif command -v wl-copy >/dev/null 2>&1; then
+    printf '%s' "$1" | wl-copy
+  elif command -v xclip >/dev/null 2>&1; then
+    printf '%s' "$1" | xclip -selection clipboard
+  else
+    return 1
+  fi
+}
+
+__open_url() {
+  if command -v open >/dev/null 2>&1; then
+    open "$1"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$1"
+  else
+    return 1
+  fi
+}
+
+web() {
+  local dir="."
+  local port="8080"
+  local should_open=0
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --open|-o)
+        should_open=1
+        shift
+        ;;
+      --port|-p)
+        if [[ -z "$2" ]]; then
+          echo "Missing port value for $1" >&2
+          return 1
+        fi
+        port="$2"
+        shift 2
+        ;;
+      *)
+        dir="$1"
+        shift
+        ;;
+    esac
+  done
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 is required for web/serve" >&2
+    return 1
+  fi
+
+  if [[ ! -d "$dir" ]]; then
+    echo "Directory not found: $dir" >&2
+    return 1
+  fi
+
+  local abs_dir
+  abs_dir="$(cd "$dir" && pwd)"
+
+  local html_path
+  html_path="$(
+    SERVE_DIR_ROOT="$abs_dir" python3 - <<'PY'
+from pathlib import Path
+from urllib.parse import quote
+import os
+
+root = Path(os.environ["SERVE_DIR_ROOT"]).resolve()
+files = [p for p in root.rglob("*") if p.is_file() and p.suffix.lower() in {".html", ".htm"}]
+
+if files:
+    latest = max(files, key=lambda p: p.stat().st_mtime)
+    print(quote(latest.relative_to(root).as_posix()))
+PY
+  )"
+
+  local url="http://localhost:${port}/"
+  if [[ -n "$html_path" ]]; then
+    url="${url}${html_path}"
+  fi
+
+  echo "Serving ${abs_dir} at http://localhost:${port}"
+
+  if __copy_to_clipboard "$url"; then
+    echo "Copied to clipboard: $url"
+  else
+    echo "URL: $url"
+  fi
+
+  if (( should_open )); then
+    __open_url "$url" >/dev/null 2>&1 || echo "Couldn't open browser automatically" >&2
+  fi
+
+  (
+    cd "$abs_dir" || exit 1
+    python3 -m http.server "$port"
+  )
+}
+
+alias serve='web'
+
+# Live-reload server for ~/main (explicit watch roots — skips the code/ symlink into ~/src)
+alias serve-main='npx live-server ~/main -l 3333 --watch=scratch,workbench,docs,data'
+
+getCurrentBranch() {
+  local current_branch_name=$(git symbolic-ref -q HEAD)
+  local current_branch_name=${current_branch_name##refs/heads/}
+  local current_branch_name=${current_branch_name:-HEAD}
+  echo $current_branch_name
+}
+
+alias pushit='git push origin $(getCurrentBranch)'
+alias pullit='git pull origin $(getCurrentBranch)'
+
+if [ -n "$ZSH_VERSION" ]; then
+  precmd_functions+=(set_name)
+elif [ -n "$BASH_VERSION" ]; then
+  PROMPT_COMMAND='set_name'
+fi
+
+symlinks() {
+    local root="${1:-/}"
+
+    find "$root" -type l 2>/dev/null | while IFS= read -r link; do
+        local target status
+        target=$(readlink "$link")
+        if [[ ! -e "$link" ]]; then
+            status="BROKEN"
+        else
+            status="OK"
+        fi
+        printf "%s\t%s\t%s\n" "$status" "$link" "$target"
+    done | column -t -s $'\t'
+}
+
+########################################
+# GIT (universal — overrides OMZ defaults)
+########################################
+
+alias gst='git status'
+alias gd='git diff'
+alias gco='git checkout'
+alias gcb='git checkout -b'
+alias gcp='git checkout -p'
+alias gca='git commit -am'
+alias gane='git commit --amend --no-edit'
+alias gpf='git push -f'
+alias gr='git fetch && git rebase origin/master'
+alias ga='git add'
+alias gaa='git add --all'
+alias gs='git-spice'
+alias rr='reset-repo'
+
+# Push current branch (sets upstream if needed)
+unalias gp 2>/dev/null
+gp() {
+  local branch=$(git branch --show-current)
+  git push || git push --set-upstream origin "$branch"
+}
+
+# Add changelog and commit
+gac() {
+  git add changelogs/
+  git commit -m "Add clog entry"
+}
+
+# Reset to origin (destructive)
+reset-repo() {
+  local branch=$(git branch --show-current)
+  git fetch origin
+  git reset --hard "origin/$branch"
+}
+
+# Reset to origin with safety backup
+reset-repo-safe() {
+  local branch=$(git branch --show-current)
+  git commit -a -m "checkpoint"
+  git branch "stash-$(date +%Y-%m-%d-%H-%M-%S)"
+  git checkout "$branch"
+  git fetch origin
+  git reset --hard "origin/$branch"
+}
+
+########################################
+# MISC (universal)
+########################################
+
+alias python='python3'
+alias to_json='python3 -m json.tool --sort-keys'
+alias web-server='python3 -m http.server'
+alias sourcezsh='source ~/.zshrc'
+
+# Simple calculator
+calc() {
+  local result=$(( $1 ))
+  echo "$1 = $result"
+}
+
+########################################
+# LOCAL OVERRIDES
+########################################
+
+# vps specific
+export LANG=en_US.UTF-8
+
+# Source local config for sensitive values and machine-specific settings
+[ -f ~/.zshrc.local ] && source ~/.zshrc.local
+command -v mise &>/dev/null && eval "$(mise activate zsh)"
+[ -f ~/.safe-chain/scripts/init-posix.sh ] && source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+
+# safe-chain: ensure binary is found before mise shims
+[ -d "$HOME/.safe-chain/bin" ] && export PATH="$HOME/.safe-chain/bin:$PATH"
+
+# herdr — running AI agents (live OpenTUI dashboard, diff-rendered, arrow-key focus).
+# Lives in its own repo (~/src/agents); also a herdr plugin bound to prefix+a.
+alias agents='bun ~/src/herdr-agent-dashboard/herdr-agents.tsx'
+alias agentsw='bun ~/src/herdr-agent-dashboard//herdr-agents.tsx --interval 1000'
+
+# mermaid — render clipboard contents as a diagram in the local preview server.
+alias mmd='~/src/dotfiles/tools/mermaid/bin/view-clipboard'
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

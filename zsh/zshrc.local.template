@@ -1,0 +1,13 @@
+# ~/.zshrc.local -- machine-local zsh overrides and secrets.
+# Sourced by ~/.zshrc; not tracked in the dotfiles repo.
+
+# --- secrets / API keys ---
+# export OPENAI_API_KEY=""
+# export ANTHROPIC_API_KEY=""
+# export GITHUB_TOKEN=""
+
+# --- machine-local PATH additions ---
+# export PATH="$HOME/bin:$PATH"
+
+# --- per-host overrides ---
+# alias ll='ls -lah'

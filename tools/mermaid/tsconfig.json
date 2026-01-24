@@ -1,0 +1,17 @@
+{
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.svelte",
+    "static/**/*.js",
+    "static/**/*.json"
+  ],
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "types": ["vitest/importMeta"]
+  },
+  "extends": "./.svelte-kit/tsconfig.json"
+}

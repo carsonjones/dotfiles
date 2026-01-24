@@ -1,0 +1,6 @@
+# Ignore Codex runtime state by default.
+*
+!.gitignore
+!config.toml
+!hooks/
+!hooks/**

@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Tidy",
+  "version": "0.1.0",
+  "description": "Sort tabs on demand by site then title; close duplicate and stale tabs",
+  "permissions": ["tabs", "storage"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "Tab Tidy" },
+  "commands": {
+    "sort-tabs": {
+      "suggested_key": { "default": "Alt+Shift+S", "mac": "Command+Shift+S" },
+      "description": "Sort tabs in current window"
+    },
+    "close-duplicates": {
+      "suggested_key": { "default": "Alt+Shift+D" },
+      "description": "Close duplicate tabs in current window"
+    },
+    "close-stale": {
+      "suggested_key": { "default": "Alt+Shift+O" },
+      "description": "Close tabs not viewed in the last hour"
+    }
+  }
+}

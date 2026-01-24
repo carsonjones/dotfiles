@@ -1,0 +1,50 @@
+#!/bin/bash
+# Interactive entry point for the dotfiles installer.
+#
+# With no args: run the Go+bubbletea picker (scripts/picker/), which then execs
+# scripts/install.sh with the chosen preset / INSTALL_ONLY.
+#
+# With any recognized install.sh flag (--full/--minimal/--slim/--list-components)
+# or -h/--help: skip the TUI and hand off directly to install.sh, so CI and
+# scripts keep working.
+set -e
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_SH="$HERE/install.sh"
+PICKER_DIR="$HERE/picker"
+PICKER_BIN="$PICKER_DIR/dotfiles-picker"
+
+# Non-interactive fast path: recognized flag → straight to install.sh, skipping
+# the TUI. `--full` is picker-only and maps to install.sh's default (no flag).
+noninteractive=false
+forward_args=()
+for arg in "$@"; do
+    case "$arg" in
+        --full)
+            noninteractive=true
+            ;;
+        --minimal|-m|--slim|-s|--list-components|-h|--help)
+            noninteractive=true
+            forward_args+=("$arg")
+            ;;
+        *)
+            forward_args+=("$arg")
+            ;;
+    esac
+done
+if $noninteractive; then
+    exec "$INSTALL_SH" "${forward_args[@]}"
+fi
+
+# Interactive path: build the picker if needed, then run it.
+if [ ! -x "$PICKER_BIN" ]; then
+    if ! command -v go >/dev/null 2>&1; then
+        echo "error: go not found and picker binary missing at $PICKER_BIN" >&2
+        echo "install go, or run scripts/install.sh directly (--minimal / --slim)." >&2
+        exit 1
+    fi
+    echo "Building picker..."
+    (cd "$PICKER_DIR" && go build -o dotfiles-picker .)
+fi
+
+exec "$PICKER_BIN" "$@"

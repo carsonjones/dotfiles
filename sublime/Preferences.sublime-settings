@@ -1,0 +1,58 @@
+// Settings in here override those in "Default/Preferences.sublime-settings",
+// and are overridden in turn by syntax-specific settings.
+{
+	"vintage_start_in_command_mode": true,
+	"caret_style": "solid",
+	"caret_extra_width": 2,
+	"font_size": 21,
+	"line_padding_bottom": 6,
+	"always_show_minimap_viewport": false,
+	"show_minimap": false,
+	"show_full_path": true,
+	"theme": "One.sublime-theme",
+	"word_wrap": true,
+	// "ignored_packages":
+	// [
+	// 	"Vintage",
+	// ],
+	"ignored_packages":
+	[
+		"Vintage",
+	],
+	"folder_exclude_patterns":
+	[
+		".git",
+		"code",
+		"node_modules",
+		"dist",
+		"build",
+		".venv",
+		"__pycache__",
+		"target",
+	],
+	"file_exclude_patterns":
+	[
+		"*.pyc",
+		"*.min.js",
+		"*.map",
+		"*.lock",
+		"*.log",
+	],
+	"binary_file_patterns":
+	[
+		"*.png",
+		"*.jpg",
+		"*.jpeg",
+		"*.gif",
+		"*.pdf",
+		"*.zip",
+		"*.woff*",
+		"*.ttf",
+	],
+	"index_files": false,
+	"tab_size": 2,
+	"font_face": "TX-02",
+	"color_scheme": "One Dark.sublime-color-scheme",
+	"dark_theme": "Default Dark.sublime-theme",
+	"light_theme": "Afterglow-blue.sublime-theme",
+}

@@ -1,0 +1,153 @@
+# General
+onboarding = false
+
+# Navigation
+[keys]
+previous_agent = "shift+alt+["
+next_agent = "shift+alt+]"
+previous_tab = "alt+["
+next_tab = "alt+]"
+
+# Focus tab 1–9 in the active workspace with alt+1..9.
+[keys.indexed]
+tabs = "alt"
+
+# Appearance
+[theme]
+name = "one-dark"
+
+auto_switch = false
+[theme.custom]
+surface_dim = "#1f232a" # Selected sidebar row
+accent = "#5b5f67"      # Selection border + nav accents (white ~25% over panel_bg)
+panel_bg = "#252A34"    # Match the Ghostty background
+surface0 = "#252A34"    # Hide inactive tab noise (match panel_bg)
+overlay0 = "#414652"    # Faint inactive borders; also dim text (agent list, prefix hints)
+
+[ui]
+show_agent_labels_on_pane_borders = true
+sidebar_collapsed_mode = "hidden"
+agent_panel_sort = "spaces"
+
+[ui.toast]
+delivery = "terminal"
+
+[ui.sound]
+enabled = false
+
+# Persistence
+[session]
+resume_agents_on_restore = true
+
+[experimental]
+pane_history = true
+
+################################################################################
+# Plugins
+################################################################################
+
+# Tiles
+# y: horizontal, u: vertical, shift: flip proportions, alt: reset to even.
+[[keys.command]]
+key = "prefix+y"
+type = "plugin_action"
+command = "local.tiles.h-wide"
+description = "tile: horizontal, current 6/10 left"
+
+[[keys.command]]
+key = "prefix+shift+y"
+type = "plugin_action"
+command = "local.tiles.h-narrow"
+description = "tile: horizontal flip, current 4/10 left"
+
+[[keys.command]]
+key = "prefix+alt+y"
+type = "plugin_action"
+command = "local.tiles.h-even"
+description = "tile: horizontal revert, even 50/50"
+
+[[keys.command]]
+key = "prefix+u"
+type = "plugin_action"
+command = "local.tiles.v-top-small"
+description = "tile: vertical, current 1/5 top"
+
+[[keys.command]]
+key = "prefix+shift+u"
+type = "plugin_action"
+command = "local.tiles.v-top-large"
+description = "tile: vertical flip, current 4/5 top"
+
+[[keys.command]]
+key = "prefix+alt+u"
+type = "plugin_action"
+command = "local.tiles.v-even"
+description = "tile: vertical revert, even 50/50"
+
+# Single Space
+[[keys.command]]
+key = "prefix+shift+s"
+type = "plugin_action"
+command = "local.single_space.collect"
+description = "single-space: collect all panes into current space"
+
+# Sort tabs
+[[keys.command]]
+key = "prefix+shift+t"
+type = "plugin_action"
+command = "local.sort_tabs.sort"
+description = "sort-tabs: sort tabs A–Z in current workspace"
+
+# Agent dashboard
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "local.agents.toggle"
+description = "agents: launch / jump to the dashboard"
+
+# Termscope
+[[keys.command]]
+key = "ctrl+shift+a"
+type = "plugin_action"
+command = "termscope.open"
+description = "visible-screen file picker"
+
+[[keys.command]]
+key = "ctrl+e"
+type = "plugin_action"
+command = "termscope.open-links"
+description = "visible-screen link picker"
+
+# # Plannotator
+# # Terminal annotations
+# [[keys.command]]
+# key = "prefix+a"
+# type = "plugin_action"
+# command = "annotate.capture"
+# description = "annotate text"
+#
+# [[keys.command]]
+# key = "prefix+shift+a"
+# type = "plugin_action"
+# command = "annotate.copy-context"
+# description = "copy annotations as context"
+#
+# [[keys.command]]
+# key = "prefix+m"
+# type = "plugin_action"
+# command = "annotate.manage"
+# description = "manage annotations"
+#
+# # Document review (plannotator-tui)
+# # prefix+o intentionally shadows herdr's open_notification_target default.
+# [[keys.command]]
+# key = "prefix+o"
+# type = "plugin_action"
+# command = "annotate.open"
+# description = "review documents in this folder"
+#
+# [[keys.command]]
+# key = "prefix+shift+o"
+# type = "plugin_action"
+# command = "annotate.last"
+# description = "review the agent's last reply"
