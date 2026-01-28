@@ -2,8 +2,25 @@
 set -e
 
 DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+MINIMAL=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --minimal|-m)
+            MINIMAL=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: install.sh [--minimal]"
+            exit 1
+            ;;
+    esac
+done
 
 echo "Installing dotfiles from $DOTFILES"
+$MINIMAL && echo "(minimal mode - skipping desktop apps)"
 
 # Detect OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -19,11 +36,16 @@ fi
 if ! command -v brew &> /dev/null; then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add brew to PATH for this script
+    if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    fi
 fi
 
-# Core tools
+# Core tools (always installed)
 echo "Installing core tools..."
-brew install git neovim fzf zoxide ripgrep fd bat gh
+brew install git neovim fzf zoxide ripgrep fd bat gh tmux
 
 # Bun
 if ! command -v bun &> /dev/null; then
@@ -31,51 +53,57 @@ if ! command -v bun &> /dev/null; then
     curl -fsSL https://bun.sh/install | bash
 fi
 
-# Docker
-if ! command -v docker &> /dev/null; then
-    echo "Installing Docker..."
-    if [[ "$OS" == "macos" ]]; then
-        brew install --cask docker
-    else
-        # Linux: install docker via official script
-        curl -fsSL https://get.docker.com | sh
-    fi
+# uv (fast python package manager)
+if ! command -v uv &> /dev/null; then
+    echo "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# Zed
-if ! command -v zed &> /dev/null; then
-    echo "Installing Zed..."
-    if [[ "$OS" == "macos" ]]; then
-        brew install --cask zed
-    else
-        curl -f https://zed.dev/install.sh | sh
-    fi
-fi
-
-# Ghostty
-if ! command -v ghostty &> /dev/null; then
-    echo "Installing Ghostty..."
-    if [[ "$OS" == "macos" ]]; then
-        brew install --cask ghostty
-    else
-        # Linux: try package managers, fall back to manual
-        if command -v apt &> /dev/null; then
-            # Debian/Ubuntu - needs PPA or manual install
-            echo "Ghostty: check https://ghostty.org/docs/install/binary#linux for your distro"
-        elif command -v dnf &> /dev/null; then
-            sudo dnf copr enable pgdev/ghostty -y && sudo dnf install ghostty -y
-        elif command -v pacman &> /dev/null; then
-            sudo pacman -S ghostty
+# Desktop apps (skip in minimal mode)
+if ! $MINIMAL; then
+    # Docker
+    if ! command -v docker &> /dev/null; then
+        echo "Installing Docker..."
+        if [[ "$OS" == "macos" ]]; then
+            brew install --cask docker
         else
-            echo "Ghostty: install manually from https://ghostty.org"
+            curl -fsSL https://get.docker.com | sh
         fi
     fi
-fi
 
-# Tailscale
-if ! command -v tailscale &> /dev/null; then
-    echo "Installing Tailscale..."
-    curl -fsSL https://tailscale.com/install.sh | sh
+    # Zed
+    if ! command -v zed &> /dev/null; then
+        echo "Installing Zed..."
+        if [[ "$OS" == "macos" ]]; then
+            brew install --cask zed
+        else
+            curl -f https://zed.dev/install.sh | sh
+        fi
+    fi
+
+    # Ghostty
+    if ! command -v ghostty &> /dev/null; then
+        echo "Installing Ghostty..."
+        if [[ "$OS" == "macos" ]]; then
+            brew install --cask ghostty
+        else
+            if command -v apt &> /dev/null; then
+                echo "Ghostty: check https://ghostty.org/docs/install/binary#linux for your distro"
+            elif command -v dnf &> /dev/null; then
+                sudo dnf copr enable pgdev/ghostty -y && sudo dnf install ghostty -y
+            elif command -v pacman &> /dev/null; then
+                sudo pacman -S ghostty
+            else
+                echo "Ghostty: install manually from https://ghostty.org"
+            fi
+        fi
+    fi
+
+    # Tailscale
+    if ! command -v tailscale &> /dev/null; then
+        echo "Installing Tailscale..."
+        curl -fsSL https://tailscale.com/install.sh | sh
+    fi
 fi
 
 # asdf for version management
@@ -84,18 +112,12 @@ if [ ! -d "$HOME/.asdf" ]; then
     git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
 fi
 
-# zinit (zsh plugin manager - used instead of oh-my-zsh)
+# zinit (zsh plugin manager)
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [ ! -d "$ZINIT_HOME" ]; then
     echo "Installing zinit..."
     mkdir -p "$(dirname $ZINIT_HOME)"
     git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
-fi
-
-# Rust/Cargo
-if ! command -v cargo &> /dev/null; then
-    echo "Installing Rust..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 fi
 
 # Link zsh configs
@@ -116,21 +138,23 @@ mkdir -p ~/.config
 rm -rf ~/.config/nvim
 ln -sf "$DOTFILES/nvim" ~/.config/nvim
 
-# Link ghostty config
-echo "Linking ghostty config..."
-if [[ "$OS" == "macos" ]]; then
-    mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty"
-    ln -sf "$DOTFILES/ghostty/config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"
-else
-    mkdir -p ~/.config/ghostty
-    ln -sf "$DOTFILES/ghostty/config" ~/.config/ghostty/config
-fi
+# Link ghostty config (skip in minimal mode)
+if ! $MINIMAL; then
+    echo "Linking ghostty config..."
+    if [[ "$OS" == "macos" ]]; then
+        mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty"
+        ln -sf "$DOTFILES/ghostty/config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"
+    else
+        mkdir -p ~/.config/ghostty
+        ln -sf "$DOTFILES/ghostty/config" ~/.config/ghostty/config
+    fi
 
-# Link zed config
-echo "Linking zed config..."
-mkdir -p ~/.config/zed
-ln -sf "$DOTFILES/zed/settings.json" ~/.config/zed/settings.json
-ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
+    # Link zed config
+    echo "Linking zed config..."
+    mkdir -p ~/.config/zed
+    ln -sf "$DOTFILES/zed/settings.json" ~/.config/zed/settings.json
+    ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
+fi
 
 # Link claude config
 echo "Linking claude config..."
@@ -140,22 +164,12 @@ ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$DOTFILES/claude/mcp_settings.json" ~/.claude/mcp_settings.json
 
 # Cursor config (template - needs manual setup)
-echo "Cursor MCP template at $DOTFILES/cursor/mcp.json.template"
-echo "Copy to ~/.cursor/mcp.json and fill in API keys"
-
-# Python tools
-if command -v pip3 &> /dev/null; then
-    echo "Installing Python tools..."
-    pip3 install --user pyenv
+if ! $MINIMAL; then
+    echo "Cursor MCP template at $DOTFILES/cursor/mcp.json.template"
+    echo "Copy to ~/.cursor/mcp.json and fill in API keys"
 fi
 
-# uv (fast python package manager)
-if ! command -v uv &> /dev/null; then
-    echo "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-fi
-
-# Node.js via asdf
+# Node.js via asdf (optional)
 if [ -d "$HOME/.asdf" ]; then
     source "$HOME/.asdf/asdf.sh"
     if ! asdf plugin list | grep -q nodejs; then
@@ -171,4 +185,6 @@ echo "Done! Next steps:"
 echo "1. Source zshrc: source ~/.zshrc"
 echo "2. Edit ~/.zshrc.local with secrets"
 echo "3. Run :Lazy in nvim to install plugins"
-echo "4. Start tailscale: sudo tailscale up"
+if ! $MINIMAL; then
+    echo "4. Start tailscale: sudo tailscale up"
+fi

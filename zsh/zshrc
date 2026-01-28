@@ -50,6 +50,8 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 
 # Editor
 export EDITOR="nvim"
+export NVIM=~/.cache/nvim/server.pipe
+alias vf='nvim --server "$NVIM" --remote-tab $(fzf)'
 
 ########################################
 # POWERLEVEL10K INSTANT PROMPT
@@ -127,6 +129,9 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 # TOOL INITIALIZATIONS
 ########################################
 
+# asdf
+[ -f "$HOME/.asdf/asdf.sh" ] && source "$HOME/.asdf/asdf.sh"
+
 # rbenv
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
@@ -139,7 +144,6 @@ fi
 command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 
 # rust
-[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
 # zoxide
 command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
@@ -168,6 +172,7 @@ alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && k
 ## Navigation - Projects
 alias src="cd ~/src"
 alias main="cd ~/main"
+alias jonze="cd ~/src/jonze"
 
 ## Git
 alias git=hub
@@ -203,6 +208,10 @@ alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_des
 
 ## Tools
 alias z="zoxide"
+alias tl='tmux ls'
+alias ta='tmux attach -t'
+alias tn='tmux new -s'
+alias tk='tmux kill-session -t'
 
 ########################################
 # FUNCTIONS
@@ -227,6 +236,9 @@ fi
 ########################################
 # LOCAL OVERRIDES
 ########################################
+
+# vps specific
+export LANG=en_US.UTF-8
 
 # Source local config for sensitive values and machine-specific settings
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local

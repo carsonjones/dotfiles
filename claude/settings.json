@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "statusLine": {
     "type": "command",
-    "command": "input=$(cat); current_dir=$(echo \"$input\" | jq -r '.workspace.current_dir'); dir_name=$(basename \"$current_dir\"); git_info=\"\"; if [ -d \"$current_dir/.git\" ] || git -C \"$current_dir\" rev-parse --git-dir > /dev/null 2>&1; then cd \"$current_dir\"; branch=$(git -c core.useBuiltinFSMonitor=false symbolic-ref --short HEAD 2>/dev/null); [ -z \"$branch\" ] && commit=$(git -c core.useBuiltinFSMonitor=false rev-parse --short HEAD 2>/dev/null) && branch=\"@$commit\"; if [ -n \"$branch\" ]; then dirty=\"\"; git -c core.useBuiltinFSMonitor=false diff --quiet 2>/dev/null && git -c core.useBuiltinFSMonitor=false diff --cached --quiet 2>/dev/null || dirty=\"*\"; ahead_behind=\"\"; upstream=$(git -c core.useBuiltinFSMonitor=false rev-parse --abbrev-ref @{upstream} 2>/dev/null); if [ -n \"$upstream\" ]; then ahead=$(git -c core.useBuiltinFSMonitor=false rev-list --count @{upstream}..HEAD 2>/dev/null); behind=$(git -c core.useBuiltinFSMonitor=false rev-list --count HEAD..@{upstream} 2>/dev/null); [ \"$behind\" -gt 0 ] && [ \"$ahead\" -gt 0 ] && ahead_behind=\":⇣⇡\"; [ \"$behind\" -gt 0 ] && [ \"$ahead\" -eq 0 ] && ahead_behind=\":⇣\"; [ \"$ahead\" -gt 0 ] && [ \"$behind\" -eq 0 ] && ahead_behind=\":⇡\"; fi; git_info=$(printf \" \\033[38;5;242m%s\\033[0m\" \"${branch}${dirty}${ahead_behind}\"); fi; fi; venv_info=\"\"; [ -n \"$VIRTUAL_ENV\" ] && venv_info=$(printf \" \\033[38;5;242m%s\\033[0m\" \"$(basename \"$VIRTUAL_ENV\")\"); time_info=$(printf \"\\033[38;5;242m%s\\033[0m\" \"$(date '+%I:%M:%S %p')\"); printf \"\\033[38;2;87;199;255m%s\\033[0m%s%s  %s\\n\" \"$dir_name\" \"$git_info\" \"$venv_info\" \"$time_info\""
+    "command": "bunx -y ccstatusline@latest",
+    "padding": 0
   },
   "alwaysThinkingEnabled": true,
   "feedbackSurveyState": {
