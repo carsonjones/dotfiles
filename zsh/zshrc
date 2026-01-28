@@ -176,7 +176,7 @@ alias main="cd ~/main"
 alias jonze="cd ~/src/jonze"
 
 ## Git
-alias git=hub
+# alias git=hub  # deprecated, use gh cli instead
 alias removegit="rm -R .git"
 alias gadd="git add ."
 alias gcm="git commit -m"
