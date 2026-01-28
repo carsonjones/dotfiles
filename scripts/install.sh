@@ -45,7 +45,17 @@ fi
 
 # Core tools (always installed)
 echo "Installing core tools..."
-brew install git neovim fzf zoxide ripgrep fd bat gh tmux
+brew install git neovim fzf zoxide ripgrep fd bat gh tmux zsh
+
+# Set zsh as default shell
+if [[ "$SHELL" != *"zsh"* ]]; then
+    echo "Setting zsh as default shell..."
+    ZSH_PATH=$(which zsh)
+    if ! grep -q "$ZSH_PATH" /etc/shells; then
+        echo "$ZSH_PATH" | sudo tee -a /etc/shells
+    fi
+    sudo chsh -s "$ZSH_PATH" "$USER"
+fi
 
 # Bun
 if ! command -v bun &> /dev/null; then
