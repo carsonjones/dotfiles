@@ -30,7 +30,7 @@ return {
           },
           file_browser = {
             theme = 'ivy',
-            hijack_netrw = true,
+            hijack_netrw = false,
             hidden = true,
             layout_config = {
               preview_width = 0.65,
