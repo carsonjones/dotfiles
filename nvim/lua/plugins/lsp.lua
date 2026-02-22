@@ -101,6 +101,7 @@ return {
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
       local servers = {
+        mdx_analyzer = {},
         astro = {},
         gopls = {
           settings = {
@@ -125,6 +126,8 @@ return {
           },
         },
       }
+
+      require('lspconfig').mdx_analyzer.setup { capabilities = capabilities }
 
       require('mason').setup()
 

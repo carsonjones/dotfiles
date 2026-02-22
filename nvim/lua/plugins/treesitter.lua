@@ -1,3 +1,6 @@
+vim.filetype.add({ extension = { mdx = 'mdx' } })
+vim.treesitter.language.register('markdown', 'mdx')
+
 return {
   'nvim-treesitter/nvim-treesitter',
   build = ':TSUpdate',
