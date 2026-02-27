@@ -96,11 +96,11 @@ return {
     lazy = false,
     keys = {
       {
-        'ff',
+        '<leader>ff',
         function()
           require('fff').find_files()
         end,
-        desc = 'FFFind files',
+        desc = '[F]ind [F]iles (fff)',
       },
     },
   },

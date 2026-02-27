@@ -12,6 +12,11 @@ return {
   },
   opts = {
     hijack_netrw_behavior = 'open_current',
+    window = {
+      mappings = {
+        ['P'] = { 'toggle_preview', config = { use_float = true, use_image_nvim = true } },
+      },
+    },
     filesystem = {
       hijack_netrw_behavior = 'open_current',
       follow_current_file = { enabled = true },
