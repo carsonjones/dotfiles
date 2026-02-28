@@ -35,12 +35,12 @@
   //   "edit_prediction_provider": "none"
   // },
   "buffer_font_size": 18.0,
-  "buffer_font_family": "TX-02",
+  "buffer_font_family": "Jet Brains Mono",
   "buffer_font_weight": 450.0,
   "buffer_line_height": {
     "custom": 1.7599999904632568
   },
-  "ui_font_family": "TX-02",
+  "ui_font_family": "Jet Brains Mono",
   "ui_font_size": 16,
   "unnecessary_code_fade": 0.3,
   "active_pane_modifiers": {
@@ -74,7 +74,7 @@
     "default_height": 100,
     "button": true,
     "line_height": "comfortable",
-    "font_family": "TX-02"
+    "font_family": "Jet Brains Mono"
   },
   "gutter": {},
   "toolbar": {

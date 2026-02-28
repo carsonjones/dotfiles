@@ -25,7 +25,6 @@ $PATH"
 # Homebrew paths (added by brew shellenv above, but extras here)
 if command -v brew &>/dev/null; then
     export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
-    [ -d "$(brew --prefix)/opt/postgresql@17/bin" ] && export PATH="$(brew --prefix)/opt/postgresql@17/bin:$PATH"
 fi
 
 # Go
@@ -36,12 +35,6 @@ if command -v brew &>/dev/null && [ -d "$(brew --prefix golang 2>/dev/null)/libe
 elif [ -d "/usr/local/go" ]; then
     export GOROOT="/usr/local/go"
     export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
-fi
-
-# Python (macos)
-if [ -d "$HOME/Library/Python/3.10" ]; then
-    export PYTHONPATH="$HOME/Library/Python/3.10"
-    export PATH="$PATH:${PYTHONPATH}/bin"
 fi
 
 # pnpm
@@ -82,6 +75,7 @@ zinit ice depth=1; zinit light romkatv/powerlevel10k
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
+zinit light larkery/zsh-histdb
 
 # OMZ snippets
 zinit snippet OMZP::git
@@ -161,10 +155,15 @@ command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 
 ## General
 alias ls='ls -G'
+alias hist='histdb'
 alias zsh="subl ~/.zshrc"
 alias savezsh="source ~/.zshrc"
 alias edit="zed"
 alias cc="claude"
+alias oc="opencode"
+alias :q="exit"
+alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
+alias eqp='nvim ~/src/scripts/quick-prompt.md'
 
 ## macOS
 alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
@@ -174,6 +173,7 @@ alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && k
 alias src="cd ~/src"
 alias main="cd ~/main"
 alias jonze="cd ~/src/jonze"
+alias dotfiles="cd ~/src/home/dotfiles"
 
 ## Git
 # alias git=hub  # deprecated, use gh cli instead
@@ -209,6 +209,7 @@ alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_des
 
 ## Tools
 alias z="zoxide"
+alias lg="lazygit"
 alias tl='tmux ls'
 alias ta='tmux attach -t'
 alias tn='tmux new -s'

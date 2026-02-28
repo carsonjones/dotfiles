@@ -45,7 +45,7 @@ fi
 
 # Core tools (always installed)
 echo "Installing core tools..."
-brew install git neovim fzf zoxide ripgrep fd bat gh tmux zsh
+brew install git neovim fzf zoxide ripgrep fd bat gh tmux zsh lazygit sqlite3
 
 # Set zsh as default shell
 if [[ "$SHELL" != *"zsh"* ]]; then

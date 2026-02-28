@@ -6,19 +6,19 @@ return {
     'nvim-tree/nvim-web-devicons',
     'MunifTanjim/nui.nvim',
   },
-  lazy = false,
+  lazy = true,
   keys = {
     { '<leader>te', ':Neotree toggle left<CR>', desc = '[T]oggle [E]xplorer', silent = true },
   },
   opts = {
-    hijack_netrw_behavior = 'open_current',
+    hijack_netrw_behavior = 'disabled',
     window = {
       mappings = {
         ['P'] = { 'toggle_preview', config = { use_float = true, use_image_nvim = true } },
       },
     },
     filesystem = {
-      hijack_netrw_behavior = 'open_current',
+      hijack_netrw_behavior = 'disabled',
       follow_current_file = { enabled = true },
       filtered_items = {
         visible = true,

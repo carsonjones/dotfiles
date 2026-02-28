@@ -3,6 +3,7 @@ return {
   dependencies = { 'vhyrro/luarocks.nvim', priority = 1001, opts = { rocks = { 'magick' } } },
   config = function()
     require('image').setup {
+      processor = 'magick_rock',
       backend = 'kitty',
       integrations = {
         markdown = { enabled = true },

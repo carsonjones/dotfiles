@@ -1,8 +1,8 @@
 return {
   {
     'nvim-telescope/telescope.nvim',
-    event = 'VimEnter',
     branch = '0.1.x',
+    cmd = 'Telescope',
     dependencies = {
       'nvim-lua/plenary.nvim',
       {
@@ -15,14 +15,62 @@ return {
       { 'nvim-telescope/telescope-ui-select.nvim' },
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
+    keys = {
+      { '<leader>sh', function() require('telescope.builtin').help_tags() end, desc = '[S]earch [H]elp' },
+      { '<leader>sk', function() require('telescope.builtin').keymaps() end, desc = '[S]earch [K]eymaps' },
+      { '<leader>sf', function() require('telescope.builtin').find_files() end, desc = '[S]earch [F]iles' },
+      { '<leader>ss', function() require('telescope.builtin').builtin() end, desc = '[S]earch [S]elect Telescope' },
+      { '<leader>sw', function() require('telescope.builtin').grep_string() end, desc = '[S]earch current [W]ord' },
+      { '<leader>sg', function() require('telescope.builtin').live_grep { cwd = vim.fn.getcwd() } end, desc = '[S]earch by [G]rep' },
+      { '<leader>sd', function() require('telescope.builtin').diagnostics { layout_config = { preview_width = 0.35 } } end, desc = '[S]earch [D]iagnostics' },
+      { '<leader>sr', function() require('telescope.builtin').resume() end, desc = '[S]earch [R]esume' },
+      { '<leader>s.', function() require('telescope.builtin').oldfiles() end, desc = '[S]earch Recent Files ("." for repeat)' },
+      { '<leader><leader>', function() require('telescope.builtin').buffers() end, desc = '[ ] Find existing buffers' },
+      { '<leader>fb', ':Telescope file_browser path=%:p:h select_buffer=true<CR>', desc = 'File [B]rowser' },
+      { '<leader>/', function()
+        require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+          winblend = 10,
+          previewer = false,
+        })
+      end, desc = '[/] Fuzzily search in current buffer' },
+      { '<leader>s/', function()
+        require('telescope.builtin').live_grep {
+          grep_open_files = true,
+          prompt_title = 'Live Grep in Open Files',
+        }
+      end, desc = '[S]earch [/] in Open Files' },
+      { '<leader>sn', function()
+        require('telescope.builtin').find_files { cwd = vim.fn.stdpath 'config' }
+      end, desc = '[S]earch [N]eovim files' },
+    },
     config = function()
       require('telescope').setup {
         defaults = {
+          dynamic_preview_title = true,
           layout_config = {
             width = 0.9,
             height = 0.85,
             preview_width = 0.5,
           },
+          preview = {
+            mime_hook = function(filepath, bufnr, opts)
+              local image_exts = { png = true, jpg = true, jpeg = true, gif = true, webp = true, avif = true }
+              local ext = filepath:match('%.(%w+)$')
+              if ext and image_exts[ext:lower()] then
+                local api = require 'image'
+                for _, img in ipairs(api.get_images { window = opts.winid }) do img:clear() end
+                local img = api.from_file(filepath, { window = opts.winid, buffer = bufnr, with_virtual_padding = true })
+                if img then img:render() end
+              else
+                require('telescope.previewers.utils').set_preview_message(bufnr, opts.winid, 'Binary cannot be previewed')
+              end
+            end,
+          },
+        },
+        pickers = {
+          lsp_references = { fname_width = 60 },
+          lsp_definitions = { fname_width = 60 },
+          lsp_implementations = { fname_width = 60 },
         },
         extensions = {
           ['ui-select'] = {
@@ -41,67 +89,11 @@ return {
 
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
-      require('telescope').load_extension 'file_browser'
-
-      local builtin = require 'telescope.builtin'
-      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', function()
-        builtin.live_grep { cwd = vim.fn.getcwd() }
-      end, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set('n', '<leader>sd', function()
-        builtin.diagnostics {
-          layout_config = { preview_width = 0.35 },
-        }
-      end, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
-      vim.keymap.set('n', '<space>fb', ':Telescope file_browser path=%:p:h select_buffer=true<CR>')
-      vim.keymap.set('n', '<leader>/', function()
-        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
-          previewer = false,
-        })
-      end, { desc = '[/] Fuzzily search in current buffer' })
-      vim.keymap.set('n', '<leader>s/', function()
-        builtin.live_grep {
-          grep_open_files = true,
-          prompt_title = 'Live Grep in Open Files',
-        }
-      end, { desc = '[S]earch [/] in Open Files' })
-      vim.keymap.set('n', '<leader>sn', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = '[S]earch [N]eovim files' })
+      pcall(require('telescope').load_extension, 'file_browser')
     end,
   },
   {
     'nvim-telescope/telescope-file-browser.nvim',
     dependencies = { 'nvim-telescope/telescope.nvim', 'nvim-lua/plenary.nvim' },
-  },
-  {
-    'dmtrKovalenko/fff.nvim',
-    build = function()
-      require('fff.download').download_or_build_binary()
-    end,
-    opts = {
-      debug = {
-        enabled = true,
-        show_scores = true,
-      },
-    },
-    lazy = false,
-    keys = {
-      {
-        '<leader>ff',
-        function()
-          require('fff').find_files()
-        end,
-        desc = '[F]ind [F]iles (fff)',
-      },
-    },
   },
 }
