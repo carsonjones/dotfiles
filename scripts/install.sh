@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "Installing dotfiles from $DOTFILES"
-$MINIMAL && echo "(minimal mode - skipping desktop apps)"
+$MINIMAL && echo "(minimal mode - skipping desktop apps and heavy plugins)"
 
 # Detect OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -67,6 +67,11 @@ fi
 if ! command -v uv &> /dev/null; then
     echo "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+
+# Heavy neovim dependencies (skip in minimal mode)
+if ! $MINIMAL; then
+    brew install imagemagick
 fi
 
 # Desktop apps (skip in minimal mode)
@@ -153,6 +158,18 @@ echo "Linking nvim config..."
 mkdir -p ~/.config
 rm -rf ~/.config/nvim
 ln -sf "$DOTFILES/nvim" ~/.config/nvim
+
+# Write minimal local.lua to disable heavy plugins
+mkdir -p "$DOTFILES/nvim/lua"
+if $MINIMAL; then
+    cat > "$DOTFILES/nvim/lua/local.lua" <<'EOF'
+-- minimal mode: disable heavy plugins
+vim.g.local_disabled_plugins = { ['3rd/image.nvim'] = true }
+EOF
+    echo "Wrote minimal nvim local.lua (image.nvim disabled)"
+elif [ ! -f "$DOTFILES/nvim/lua/local.lua" ]; then
+    touch "$DOTFILES/nvim/lua/local.lua"
+fi
 
 # Link ghostty config (skip in minimal mode)
 if ! $MINIMAL; then

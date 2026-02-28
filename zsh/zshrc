@@ -156,7 +156,7 @@ command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 ## General
 alias ls='ls -G'
 alias hist='histdb'
-alias zsh="subl ~/.zshrc"
+alias zsh="nvim ~/.zshrc"
 alias savezsh="source ~/.zshrc"
 alias edit="zed"
 alias cc="claude"
@@ -176,8 +176,6 @@ alias jonze="cd ~/src/jonze"
 alias dotfiles="cd ~/src/home/dotfiles"
 
 ## Git
-# alias git=hub  # deprecated, use gh cli instead
-alias removegit="rm -R .git"
 alias gadd="git add ."
 alias gcm="git commit -m"
 alias gav="git add . && git commit -v"
@@ -186,7 +184,6 @@ alias gpom="git pull origin master"
 alias gpu="git push -u origin"
 alias gitlocalignore="subl .git/info/exclude"
 alias co="git checkout"
-alias cosafe="python scripts/get_last_release_migration.py | xargs -I {} python manage.py migrate main {} && git checkout"
 alias oops="git add . && fc -e : -1"
 alias ammend="git commit --ammend"
 alias gitbranches='for remote in `git branch -r`; do git branch --track ${remote#origin/} $remote; done'
@@ -198,10 +195,6 @@ alias conflicts='git diff --name-only --diff-filter=U'
 ## Python
 alias python2=python2
 alias python=python3
-alias pt='pytest --reuse-db'
-alias ptx='pt -n auto --dist loadgroup'
-alias ptk='pytest --reuse-db -n 0 -k'
-alias ptl="pytest 2>&1 | tee test-log-$(date +%Y-%m-%d).log"
 
 ## Config files (macos)
 alias ghostty-config='subl "$HOME/Library/Application Support/com.mitchellh.ghostty/config"'
@@ -234,6 +227,8 @@ if [ -n "$ZSH_VERSION" ]; then
 elif [ -n "$BASH_VERSION" ]; then
   PROMPT_COMMAND='set_name'
 fi
+
+alias vmstats='ssh jonze.exe.xyz vmstats'
 
 ########################################
 # LOCAL OVERRIDES
