@@ -1,5 +1,6 @@
 return {
   '3rd/image.nvim',
+  enabled = not (vim.g.local_disabled_plugins and vim.g.local_disabled_plugins['3rd/image.nvim']),
   dependencies = { 'vhyrro/luarocks.nvim', priority = 1001, opts = { rocks = { 'magick' } } },
   config = function()
     require('image').setup {
