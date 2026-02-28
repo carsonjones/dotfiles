@@ -14,6 +14,7 @@ fi
 # Consolidated PATH
 export PATH="\
 $HOME/.local/bin:\
+$HOME/bin:\
 $HOME/.bun/bin:\
 /usr/local/bin:\
 /usr/bin:\
@@ -173,7 +174,7 @@ alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && k
 alias src="cd ~/src"
 alias main="cd ~/main"
 alias jonze="cd ~/src/jonze"
-alias dotfiles="cd ~/src/home/dotfiles"
+alias dotfiles="cd ~/src/dotfiles"
 
 ## Git
 alias gadd="git add ."
@@ -228,7 +229,6 @@ elif [ -n "$BASH_VERSION" ]; then
   PROMPT_COMMAND='set_name'
 fi
 
-alias vmstats='ssh jonze.exe.xyz vmstats'
 
 ########################################
 # LOCAL OVERRIDES
