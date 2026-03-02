@@ -7,6 +7,7 @@ return {
     'MunifTanjim/nui.nvim',
   },
   lazy = true,
+  cmd = { 'Neotree' },
   keys = {
     { '<leader>te', ':Neotree toggle left<CR>', desc = '[T]oggle [E]xplorer', silent = true },
   },

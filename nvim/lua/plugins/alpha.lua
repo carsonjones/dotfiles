@@ -14,10 +14,7 @@ return {
     }
 
     dashboard.section.buttons.val = {
-      dashboard.button('e', '  File tree', function()
-        require('lazy').load { plugins = { 'neo-tree.nvim' } }
-        vim.cmd 'Neotree reveal'
-      end),
+      dashboard.button('e', '  File tree', ':Neotree reveal<CR>'),
       dashboard.button('f', '  Find file', ':Telescope find_files<CR>'),
       dashboard.button('r', '  Recent files', ':Telescope oldfiles<CR>'),
       dashboard.button('g', '  Live grep', ':Telescope live_grep<CR>'),
