@@ -25,7 +25,39 @@ return {
       { '<leader>sd', function() require('telescope.builtin').diagnostics { layout_config = { preview_width = 0.35 } } end, desc = '[S]earch [D]iagnostics' },
       { '<leader>sr', function() require('telescope.builtin').resume() end, desc = '[S]earch [R]esume' },
       { '<leader>s.', function() require('telescope.builtin').oldfiles() end, desc = '[S]earch Recent Files ("." for repeat)' },
-      { '<leader><leader>', function() require('telescope.builtin').buffers() end, desc = '[ ] Find existing buffers' },
+      { '<leader><leader>', function()
+        local git_status = {}
+        for _, l in ipairs(vim.fn.systemlist('git status --porcelain 2>/dev/null') or {}) do
+          local xy, f = l:match('^(..) (.+)$')
+          if f then git_status[f:match('-> (.+)') or f] = xy end
+        end
+        local ic = { M = '●', A = '+', D = '✗' }
+        local hl = { M = 'DiagnosticWarn', A = 'DiagnosticOk', D = 'DiagnosticError' }
+        local bufs = vim.tbl_filter(function(b) return vim.api.nvim_buf_is_loaded(b) end, vim.api.nvim_list_bufs())
+        local bufnr_width = #tostring(#bufs > 0 and math.max(unpack(bufs)) or 1)
+        local gen = require('telescope.make_entry').gen_from_buffer { bufnr_width = bufnr_width }
+        require('telescope.builtin').buffers({
+          entry_maker = function(n)
+            local e = gen(n)
+            if not e then return end
+            local orig = e.display
+            e.display = function(x)
+              local s, h = orig(x)
+              local rel = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(x.bufnr), ':.')
+              local xy = git_status[rel]
+              if not xy then return s, h end
+              local c = xy:sub(1,1) ~= ' ' and xy:sub(1,1) or xy:sub(2,2)
+              local icon = ic[c] or c
+              local off = #icon + 1
+              h = h or {}
+              for _, hi in ipairs(h) do hi[1][1] = hi[1][1] + off; hi[1][2] = hi[1][2] + off end
+              table.insert(h, 1, { { 0, #icon }, hl[c] or 'Normal' })
+              return icon .. ' ' .. s, h
+            end
+            return e
+          end,
+        })
+      end, desc = '[ ] Find existing buffers' },
       { '<leader>fb', ':Telescope file_browser path=%:p:h select_buffer=true<CR>', desc = 'File [B]rowser' },
       { '<leader>/', function()
         require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
@@ -53,12 +85,13 @@ return {
             preview_width = 0.5,
           },
           preview = {
+            wrap = true,
             mime_hook = function(filepath, bufnr, opts)
               local image_exts = { png = true, jpg = true, jpeg = true, gif = true, webp = true, avif = true }
               local ext = filepath:match('%.(%w+)$')
+              local api = require 'image'
+              for _, img in ipairs(api.get_images { window = opts.winid }) do img:clear() end
               if ext and image_exts[ext:lower()] then
-                local api = require 'image'
-                for _, img in ipairs(api.get_images { window = opts.winid }) do img:clear() end
                 local img = api.from_file(filepath, { window = opts.winid, buffer = bufnr, with_virtual_padding = true })
                 if img then img:render() end
               else
@@ -86,6 +119,15 @@ return {
           },
         },
       }
+
+      vim.api.nvim_create_autocmd('User', {
+        pattern = 'TelescopePreviewerLoaded',
+        callback = function()
+          local ok, api = pcall(require, 'image')
+          if not ok then return end
+          for _, img in ipairs(api.get_images()) do img:clear() end
+        end,
+      })
 
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')

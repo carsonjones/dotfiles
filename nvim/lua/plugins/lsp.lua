@@ -106,7 +106,13 @@ return {
 
       local servers = {
         mdx_analyzer = {},
-        astro = {},
+        astro = {
+          init_options = {
+            typescript = {
+              tsdk = vim.fn.getcwd() .. '/node_modules/typescript/lib',
+            },
+          },
+        },
         gopls = {
           settings = {
             gopls = {
