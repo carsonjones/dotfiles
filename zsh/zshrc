@@ -13,6 +13,7 @@ fi
 
 # Consolidated PATH
 export PATH="\
+$HOME/bin:\
 $HOME/.local/bin:\
 $HOME/bin:\
 $HOME/.bun/bin:\
