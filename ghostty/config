@@ -1,6 +1,6 @@
 theme = adwaita dark
 window-colorspace = "display-p3"
-background = 21272b
+background = 272C35
 
 font-size = 18
 adjust-cell-height = 15%

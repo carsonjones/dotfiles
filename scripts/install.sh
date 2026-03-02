@@ -195,11 +195,10 @@ mkdir -p ~/.config/tmux
 ln -sf "$DOTFILES/tmux/tmux.conf" ~/.config/tmux/tmux.conf
 
 # Install TPM if not present
-if [ ! -d "$DOTFILES/tmux/plugins/tpm" ]; then
+if [ ! -d ~/.config/tmux/plugins/tpm ]; then
     echo "Installing TPM..."
-    git clone https://github.com/tmux-plugins/tpm "$DOTFILES/tmux/plugins/tpm"
+    git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
 fi
-ln -sf "$DOTFILES/tmux/plugins" ~/.config/tmux/plugins
 
 # Link claude config
 echo "Linking claude config..."
