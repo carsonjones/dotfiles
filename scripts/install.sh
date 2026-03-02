@@ -189,6 +189,17 @@ if ! $MINIMAL; then
     ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
 fi
 
+# Link tmux config
+echo "Linking tmux config..."
+mkdir -p ~/.config/tmux
+ln -sf "$DOTFILES/tmux/tmux.conf" ~/.config/tmux/tmux.conf
+
+# Install TPM if not present
+if [ ! -d ~/.config/tmux/plugins/tpm ]; then
+    echo "Installing TPM..."
+    git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
+fi
+
 # Link claude config
 echo "Linking claude config..."
 mkdir -p ~/.claude
