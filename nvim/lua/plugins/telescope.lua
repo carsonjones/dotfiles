@@ -22,6 +22,7 @@ return {
       { '<leader>ss', function() require('telescope.builtin').builtin() end, desc = '[S]earch [S]elect Telescope' },
       { '<leader>sw', function() require('telescope.builtin').grep_string() end, desc = '[S]earch current [W]ord' },
       { '<leader>sg', function() require('telescope.builtin').live_grep { cwd = vim.fn.getcwd() } end, desc = '[S]earch by [G]rep' },
+      { '<leader>sa', function() require('telescope.builtin').live_grep { cwd = vim.fn.getcwd(), file_ignore_patterns = {} } end, desc = '[S]earch [A]ll (no filters)' },
       { '<leader>sd', function() require('telescope.builtin').diagnostics { layout_config = { preview_width = 0.35 } } end, desc = '[S]earch [D]iagnostics' },
       { '<leader>sr', function() require('telescope.builtin').resume() end, desc = '[S]earch [R]esume' },
       { '<leader>s.', function() require('telescope.builtin').oldfiles() end, desc = '[S]earch Recent Files ("." for repeat)' },
@@ -79,6 +80,8 @@ return {
       require('telescope').setup {
         defaults = {
           dynamic_preview_title = true,
+          path_display = { 'truncate' },
+          file_ignore_patterns = { '%.stories%.', '%.mock%.', '%.mocks%.', '__mocks__/', 'mocks/', '%.test%.', '%.spec%.', '__snapshots__/', '%.generated%.' },
           layout_config = {
             width = 0.9,
             height = 0.85,
