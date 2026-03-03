@@ -12,6 +12,10 @@ return {
     { '<leader>te', ':Neotree toggle left<CR>', desc = '[T]oggle [E]xplorer', silent = true },
   },
   opts = {
+    source_selector = {
+      winbar = true,
+      show_scrolled_off_parent_node = true,
+    },
     hijack_netrw_behavior = 'disabled',
     window = {
       mappings = {
