@@ -26,3 +26,29 @@ vim.keymap.set('n', '<leader>yp', function()
   vim.fn.setreg('+', path)
   vim.notify('Copied: ' .. path)
 end, { desc = 'Yank relative path' })
+
+vim.keymap.set('n', '<leader>yd', function()
+  local diags = vim.diagnostic.get(0, { lnum = vim.fn.line('.') - 1 })
+  if #diags == 0 then
+    vim.notify('No diagnostics on current line')
+    return
+  end
+  local lines = vim.tbl_map(function(d) return d.message end, diags)
+  local text = table.concat(lines, '\n')
+  vim.fn.setreg('+', text)
+  vim.notify('Copied ' .. #diags .. ' diagnostic(s)')
+end, { desc = 'Yank diagnostics (line)' })
+
+vim.keymap.set('n', '<leader>yD', function()
+  local diags = vim.diagnostic.get(0)
+  if #diags == 0 then
+    vim.notify('No diagnostics in buffer')
+    return
+  end
+  local lines = vim.tbl_map(function(d)
+    return (d.lnum + 1) .. ': ' .. d.message
+  end, diags)
+  local text = table.concat(lines, '\n')
+  vim.fn.setreg('+', text)
+  vim.notify('Copied ' .. #diags .. ' diagnostic(s)')
+end, { desc = 'Yank diagnostics (buffer)' })
