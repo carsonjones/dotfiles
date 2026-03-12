@@ -23,6 +23,7 @@ $HOME/.bun/bin:\
 /usr/sbin:\
 /sbin:\
 $PATH"
+#$HOME.local/share/mise/shims:
 
 # Homebrew paths (added by brew shellenv above, but extras here)
 if command -v brew &>/dev/null; then
@@ -240,3 +241,4 @@ export LANG=en_US.UTF-8
 
 # Source local config for sensitive values and machine-specific settings
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
+eval "$(mise activate zsh)"

@@ -9,6 +9,10 @@ return {
     require('obsidian').setup(opts)
   end,
   opts = {
+    ui = {
+      checkboxes = {},
+      bullets = {},
+    },
     workspaces = vim.g.obsidian_workspaces or {},
     -- Use gf for wikilinks (built-in with obsidian.nvim)
     mappings = {
