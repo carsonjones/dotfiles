@@ -162,12 +162,58 @@ return {
         end,
         desc = '[S]earch [N]eovim files',
       },
+      {
+        '<leader>sF',
+        function()
+          local query = vim.fn.input 'Files containing: '
+          if query == '' then return end
+          local cwd = vim.fn.getcwd()
+          local pickers = require 'telescope.pickers'
+          local finders = require 'telescope.finders'
+          local conf = require('telescope.config').values
+          local actions = require 'telescope.actions'
+          local action_state = require 'telescope.actions.state'
+          local make_entry = require 'telescope.make_entry'
+          pickers.new({}, {
+            prompt_title = 'Files containing: ' .. query,
+            finder = finders.new_oneshot_job(
+              { 'rg', '--files-with-matches', '--', query, cwd },
+              { entry_maker = make_entry.gen_from_file { cwd = cwd } }
+            ),
+            sorter = conf.file_sorter {},
+            previewer = conf.file_previewer {},
+            attach_mappings = function(prompt_bufnr)
+              actions.select_default:replace(function()
+                actions.close(prompt_bufnr)
+                local entry = action_state.get_selected_entry()
+                if not entry then return end
+                local filepath = entry.path or entry.value
+                local result = vim.fn.systemlist { 'rg', '-n', '--', query, filepath }
+                local lnum = 1
+                if result[1] then
+                  local n = result[1]:match '^(%d+):'
+                  if n then lnum = tonumber(n) end
+                end
+                vim.cmd('edit ' .. vim.fn.fnameescape(filepath))
+                vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+                vim.cmd 'normal! zz'
+              end)
+              return true
+            end,
+          }):find()
+        end,
+        desc = '[S]earch [F]iles containing pattern (one per file)',
+      },
     },
     config = function()
       require('telescope').setup {
         defaults = {
           dynamic_preview_title = true,
           path_display = { 'truncate' },
+          mappings = {
+            i = { ['<C-t>'] = function(...) return require('trouble.sources.telescope').open(...) end },
+            n = { ['<C-t>'] = function(...) return require('trouble.sources.telescope').open(...) end },
+          },
           file_ignore_patterns = { '%.stories%.', '%.mock%.', '%.mocks%.', '__mocks__/', 'mocks/', '%.test%.', '%.spec%.', '__snapshots__/', '%.generated%.' },
           layout_config = {
             width = 0.9,

@@ -163,6 +163,11 @@ alias zsh="nvim ~/.zshrc"
 alias savezsh="source ~/.zshrc"
 alias edit="zed"
 alias cc="claude"
+cc-color() {
+  local colors=(red blue green yellow purple orange pink cyan)
+  local color=${colors[$((RANDOM % ${#colors[@]}))]}
+  printf '/color %s\n' "$color" | claude "$@"
+}
 alias oc="opencode"
 alias :q="exit"
 alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
