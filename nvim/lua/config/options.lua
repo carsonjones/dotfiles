@@ -24,3 +24,7 @@ vim.opt.cursorline = true
 vim.opt.scrolloff = 10
 vim.opt.wrap = true
 vim.opt.linebreak = true
+
+vim.opt.foldmethod = 'expr'
+vim.opt.foldexpr = 'nvim_treesitter#foldexpr()'
+vim.opt.foldlevel = 99
