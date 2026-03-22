@@ -1,4 +1,5 @@
 vim.opt.number = true
+vim.opt.relativenumber = true
 vim.opt.title = true
 vim.opt.titlestring = '%f'
 vim.opt.mouse = 'a'
@@ -22,6 +23,7 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 vim.opt.scrolloff = 10
+vim.opt.smoothscroll = true
 vim.opt.wrap = true
 vim.opt.linebreak = true
 
