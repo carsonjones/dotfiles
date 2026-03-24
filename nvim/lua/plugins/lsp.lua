@@ -125,6 +125,7 @@ return {
             },
           },
         },
+        ts_ls = {},
         ruff = {},
         lua_ls = {
           settings = {

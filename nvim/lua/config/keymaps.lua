@@ -1,4 +1,7 @@
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+-- Cmd+C in visual mode: yank only, no cut
+vim.keymap.set('v', '<D-c>', 'y')
 vim.keymap.set('n', '<leader>?', function()
   require('which-key').show()
 end, { desc = 'Show keymaps' })
