@@ -127,6 +127,7 @@ return {
         },
         ts_ls = {},
         ruff = {},
+        tailwindcss = {},
         lua_ls = {
           settings = {
             Lua = {
