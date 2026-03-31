@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neovim Keybindings</title>
+<style>
+  :root {
+    --bg: #1a1b26;
+    --bg-surface: #24283b;
+    --bg-hover: #292e42;
+    --border: #3b4261;
+    --text: #c0caf5;
+    --text-dim: #565f89;
+    --accent: #7aa2f7;
+    --green: #9ece6a;
+    --yellow: #e0af68;
+    --red: #f7768e;
+    --magenta: #bb9af7;
+    --cyan: #7dcfff;
+    --orange: #ff9e64;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem;
+    line-height: 1.6;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 0.75rem 0;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  #search {
+    flex: 1;
+    min-width: 250px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: var(--bg-surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #search:focus { border-color: var(--accent); }
+  #search::placeholder { color: var(--text-dim); }
+
+  .filters {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+    background: var(--bg-surface);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { color: var(--text); border-color: var(--text-dim); }
+  .filter-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(122, 162, 247, 0.1); }
+
+  .stats {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    padding: 0.25rem 0 0.5rem;
+  }
+
+  .category {
+    margin-bottom: 1.5rem;
+  }
+
+  .category-header {
+    font-size: 0.9rem;
+    color: var(--magenta);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .category-header:hover { color: var(--text); }
+  .category-header .count {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    background: var(--bg-surface);
+    padding: 0.1rem 0.5rem;
+    border-radius: 3px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  tr { border-bottom: 1px solid rgba(59, 66, 97, 0.4); }
+  tr:hover { background: var(--bg-hover); }
+  tr.hidden { display: none; }
+
+  td {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    vertical-align: top;
+  }
+
+  .col-mode {
+    width: 55px;
+    color: var(--text-dim);
+  }
+
+  .col-key {
+    width: 150px;
+    white-space: nowrap;
+  }
+
+  kbd {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.8rem;
+    color: var(--green);
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  .col-desc { color: var(--text); }
+  .col-source {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    text-align: right;
+    width: 130px;
+  }
+
+  .mode-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    margin-right: 2px;
+    font-weight: 600;
+  }
+  .mode-n { background: rgba(122, 162, 247, 0.2); color: var(--accent); }
+  .mode-v { background: rgba(187, 154, 247, 0.2); color: var(--magenta); }
+  .mode-i { background: rgba(158, 206, 106, 0.2); color: var(--green); }
+  .mode-t { background: rgba(255, 158, 100, 0.2); color: var(--orange); }
+  .mode-x { background: rgba(224, 175, 104, 0.2); color: var(--yellow); }
+  .mode-o { background: rgba(125, 207, 255, 0.2); color: var(--cyan); }
+  .mode-s { background: rgba(247, 118, 142, 0.2); color: var(--red); }
+
+  mark {
+    background: rgba(224, 175, 104, 0.3);
+    color: var(--yellow);
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-dim);
+    display: none;
+  }
+
+  .leader-note {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    background: var(--bg-surface);
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .leader-note kbd { font-size: 0.7rem; }
+</style>
+</head>
+<body>
+
+<h1>Neovim Keybindings</h1>
+<p class="subtitle">~/src/dotfiles/nvim &mdash; auto-generated from config</p>
+
+<div class="leader-note">
+  <kbd>&lt;leader&gt;</kbd> = <kbd>Space</kbd> &nbsp;&bull;&nbsp;
+  <kbd>&lt;C-x&gt;</kbd> = Ctrl+x &nbsp;&bull;&nbsp;
+  <kbd>&lt;A-x&gt;</kbd> = Alt/Option+x &nbsp;&bull;&nbsp;
+  <kbd>&lt;D-x&gt;</kbd> = Cmd+x
+</div>
+
+<div class="search-wrapper">
+  <input type="text" id="search" placeholder="Search keybindings... (key, description, mode, category)" autofocus>
+  <div class="filters">
+    <button class="filter-btn active" data-mode="all">All</button>
+    <button class="filter-btn" data-mode="n">Normal</button>
+    <button class="filter-btn" data-mode="v">Visual</button>
+    <button class="filter-btn" data-mode="i">Insert</button>
+    <button class="filter-btn" data-mode="t">Terminal</button>
+    <button class="filter-btn" data-mode="o">Op-pending</button>
+  </div>
+</div>
+<div class="stats" id="stats"></div>
+<div class="empty-state" id="empty">No keybindings match your search.</div>
+<div id="content"></div>
+
+<script>
+const BINDINGS = [
+  // Core (keymaps.lua)
+  { mode: "n", key: "<Esc>", desc: "Clear search highlights", cat: "Core", src: "keymaps.lua" },
+  { mode: "v", key: "<D-c>", desc: "Yank (Cmd+C, no cut)", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "<leader>?", desc: "Show which-key (all keymaps)", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "<leader>q", desc: "Open diagnostic quickfix list", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "gl", desc: "Show diagnostic float", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "[d", desc: "Previous diagnostic", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "]d", desc: "Next diagnostic", cat: "Core", src: "keymaps.lua" },
+  { mode: "t", key: "<Esc><Esc>", desc: "Exit terminal mode", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "<leader>yn", desc: "Yank filename to clipboard", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "<leader>yp", desc: "Yank relative path to clipboard", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "<leader>yd", desc: "Yank diagnostics (current line)", cat: "Core", src: "keymaps.lua" },
+  { mode: "n", key: "<leader>yD", desc: "Yank diagnostics (entire buffer)", cat: "Core", src: "keymaps.lua" },
+
+  // Window Navigation
+  { mode: "n", key: "<C-h>", desc: "Move focus left", cat: "Navigation", src: "keymaps.lua" },
+  { mode: "n", key: "<C-l>", desc: "Move focus right", cat: "Navigation", src: "keymaps.lua" },
+  { mode: "n", key: "<C-j>", desc: "Move focus down", cat: "Navigation", src: "keymaps.lua" },
+  { mode: "n", key: "<C-k>", desc: "Move focus up", cat: "Navigation", src: "keymaps.lua" },
+  { mode: "t", key: "<C-h>", desc: "Move focus left (from terminal)", cat: "Navigation", src: "keymaps.lua" },
+  { mode: "t", key: "<C-l>", desc: "Move focus right (from terminal)", cat: "Navigation", src: "keymaps.lua" },
+
+  // Line Movement
+  { mode: "n", key: "<A-k>", desc: "Move line down", cat: "Editing", src: "keymaps.lua" },
+  { mode: "n", key: "<A-j>", desc: "Move line up", cat: "Editing", src: "keymaps.lua" },
+  { mode: "v", key: "<A-k>", desc: "Move selection down", cat: "Editing", src: "keymaps.lua" },
+  { mode: "v", key: "<A-j>", desc: "Move selection up", cat: "Editing", src: "keymaps.lua" },
+
+  // Telescope / Search
+  { mode: "n", key: "<leader>sh", desc: "Search help tags", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sk", desc: "Search keymaps", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sf", desc: "Search files", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>ss", desc: "Search Telescope builtins", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sw", desc: "Search current word (grep)", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sg", desc: "Search by grep", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sa", desc: "Search all (no filters)", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sd", desc: "Search diagnostics", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sr", desc: "Search resume (reopen last)", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>s.", desc: "Search recent files", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader><leader>", desc: "Find open buffers", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>fb", desc: "File browser", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>/", desc: "Fuzzy search current buffer", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>s/", desc: "Search in open files", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sn", desc: "Search Neovim config files", cat: "Search (Telescope)", src: "telescope.lua" },
+  { mode: "n", key: "<leader>sF", desc: "Search files containing pattern", cat: "Search (Telescope)", src: "telescope.lua" },
+
+  // LSP
+  { mode: "n", key: "gd", desc: "Go to definition", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "gr", desc: "Go to references", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "gI", desc: "Go to implementation", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "gD", desc: "Go to declaration", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "<leader>D", desc: "Type definition", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "<leader>ds", desc: "Document symbols", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "<leader>ws", desc: "Workspace symbols", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "<leader>rn", desc: "Rename symbol", cat: "LSP", src: "lsp.lua" },
+  { mode: "n,x", key: "<leader>ca", desc: "Code action", cat: "LSP", src: "lsp.lua" },
+  { mode: "n", key: "<leader>th", desc: "Toggle inlay hints", cat: "LSP", src: "lsp.lua" },
+
+  // Git (gitsigns)
+  { mode: "n", key: "]h", desc: "Next git hunk", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "[h", desc: "Previous git hunk", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "<leader>hs", desc: "Stage hunk", cat: "Git", src: "gitsigns.lua" },
+  { mode: "v", key: "<leader>hs", desc: "Stage hunk (visual)", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "<leader>hr", desc: "Reset hunk", cat: "Git", src: "gitsigns.lua" },
+  { mode: "v", key: "<leader>hr", desc: "Reset hunk (visual)", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "<leader>hS", desc: "Stage entire buffer", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "<leader>hu", desc: "Undo stage hunk", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "<leader>hp", desc: "Preview hunk", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "<leader>hb", desc: "Blame line (full)", cat: "Git", src: "gitsigns.lua" },
+  { mode: "n", key: "<leader>hd", desc: "Diff this file", cat: "Git", src: "gitsigns.lua" },
+
+  // Trouble
+  { mode: "n", key: "<leader>xx", desc: "Toggle diagnostics panel", cat: "Trouble", src: "trouble.lua" },
+  { mode: "n", key: "<leader>xX", desc: "Toggle buffer diagnostics", cat: "Trouble", src: "trouble.lua" },
+  { mode: "n", key: "<leader>xr", desc: "Toggle LSP references", cat: "Trouble", src: "trouble.lua" },
+  { mode: "n", key: "<leader>xd", desc: "Toggle LSP definitions", cat: "Trouble", src: "trouble.lua" },
+  { mode: "n", key: "<leader>xq", desc: "Toggle quickfix list", cat: "Trouble", src: "trouble.lua" },
+
+  // File Explorer
+  { mode: "n", key: "<leader>te", desc: "Toggle file explorer (Neo-tree)", cat: "File Explorer", src: "neo-tree.lua" },
+
+  // Completion (Insert mode)
+  { mode: "i", key: "<C-n>", desc: "Next completion item", cat: "Completion", src: "cmp.lua" },
+  { mode: "i", key: "<C-p>", desc: "Previous completion item", cat: "Completion", src: "cmp.lua" },
+  { mode: "i", key: "<C-b>", desc: "Scroll docs up", cat: "Completion", src: "cmp.lua" },
+  { mode: "i", key: "<C-f>", desc: "Scroll docs down", cat: "Completion", src: "cmp.lua" },
+  { mode: "i", key: "<C-y>", desc: "Confirm completion", cat: "Completion", src: "cmp.lua" },
+  { mode: "i", key: "<CR>", desc: "Confirm completion (Enter)", cat: "Completion", src: "cmp.lua" },
+  { mode: "i", key: "<C-Space>", desc: "Trigger completion menu", cat: "Completion", src: "cmp.lua" },
+  { mode: "i,s", key: "<C-l>", desc: "Expand/jump snippet forward", cat: "Completion", src: "cmp.lua" },
+  { mode: "i,s", key: "<C-h>", desc: "Jump snippet backward", cat: "Completion", src: "cmp.lua" },
+
+  // Copilot
+  { mode: "i", key: "<C-j>", desc: "Accept Copilot suggestion", cat: "Copilot", src: "copilot.lua" },
+  { mode: "i", key: "<C-]>", desc: "Dismiss Copilot suggestion", cat: "Copilot", src: "copilot.lua" },
+
+  // Formatting
+  { mode: "n", key: "<leader>cf", desc: "Format buffer", cat: "Code", src: "conform.lua" },
+
+  // Claude Code
+  { mode: "n", key: "<leader>ac", desc: "Toggle Claude Code", cat: "Claude Code", src: "claudecode.lua" },
+  { mode: "n", key: "<leader>af", desc: "Focus Claude Code", cat: "Claude Code", src: "claudecode.lua" },
+  { mode: "v", key: "<leader>as", desc: "Send selection to Claude", cat: "Claude Code", src: "claudecode.lua" },
+  { mode: "n", key: "<leader>ab", desc: "Add buffer to Claude", cat: "Claude Code", src: "claudecode.lua" },
+
+  // Find & Replace
+  { mode: "n", key: "<leader>fr", desc: "Find & replace (word under cursor)", cat: "Code", src: "misc.lua" },
+  { mode: "v", key: "<leader>fr", desc: "Find & replace (selection)", cat: "Code", src: "misc.lua" },
+
+  // Treesitter
+  { mode: "n", key: "<leader>tc", desc: "Toggle treesitter context", cat: "Toggle", src: "treesitter.lua" },
+
+  // CSV
+  { mode: "o,x", key: "if", desc: "Select inner CSV field", cat: "CSV", src: "csvview.lua" },
+  { mode: "o,x", key: "af", desc: "Select outer CSV field", cat: "CSV", src: "csvview.lua" },
+  { mode: "n,v", key: "<Tab>", desc: "Jump to next field", cat: "CSV", src: "csvview.lua" },
+  { mode: "n,v", key: "<S-Tab>", desc: "Jump to previous field", cat: "CSV", src: "csvview.lua" },
+  { mode: "n,v", key: "<Enter>", desc: "Jump to next row", cat: "CSV", src: "csvview.lua" },
+  { mode: "n,v", key: "<S-Enter>", desc: "Jump to previous row", cat: "CSV", src: "csvview.lua" },
+
+  // Vim Defaults (essential)
+  { mode: "n", key: ":w", desc: "Save file", cat: "Defaults (Essential)", src: "vim" },
+  { mode: "n", key: ":q", desc: "Quit window", cat: "Defaults (Essential)", src: "vim" },
+  { mode: "n", key: ":wq", desc: "Save and quit", cat: "Defaults (Essential)", src: "vim" },
+  { mode: "n", key: ":e {file}", desc: "Open/edit file", cat: "Defaults (Essential)", src: "vim" },
+  { mode: "n", key: "u", desc: "Undo", cat: "Defaults (Essential)", src: "vim" },
+  { mode: "n", key: "<C-r>", desc: "Redo", cat: "Defaults (Essential)", src: "vim" },
+  { mode: "n", key: ".", desc: "Repeat last change", cat: "Defaults (Essential)", src: "vim" },
+
+  // Defaults: Splits & Windows
+  { mode: "n", key: "<C-w>s", desc: "Horizontal split", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>v", desc: "Vertical split", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>q", desc: "Close window", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>=", desc: "Equalize window sizes", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>o", desc: "Close all other windows", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>T", desc: "Move window to new tab", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>+", desc: "Increase window height", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>-", desc: "Decrease window height", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w>>", desc: "Increase window width", cat: "Defaults (Windows)", src: "vim" },
+  { mode: "n", key: "<C-w><", desc: "Decrease window width", cat: "Defaults (Windows)", src: "vim" },
+
+  // Defaults: Motion
+  { mode: "n", key: "gg", desc: "Go to top of file", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "G", desc: "Go to bottom of file", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "{number}G", desc: "Go to line number", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "w", desc: "Next word", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "b", desc: "Previous word", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "e", desc: "End of word", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "0", desc: "Beginning of line", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "$", desc: "End of line", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "^", desc: "First non-blank character", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "%", desc: "Jump to matching bracket", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "<C-d>", desc: "Scroll half page down", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "<C-u>", desc: "Scroll half page up", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "<C-o>", desc: "Jump to older position", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "<C-i>", desc: "Jump to newer position", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "f{char}", desc: "Find char forward on line", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "F{char}", desc: "Find char backward on line", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "/{pattern}", desc: "Search forward", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "?{pattern}", desc: "Search backward", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "n", desc: "Next search result", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "N", desc: "Previous search result", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "*", desc: "Search word under cursor (forward)", cat: "Defaults (Motion)", src: "vim" },
+  { mode: "n", key: "#", desc: "Search word under cursor (backward)", cat: "Defaults (Motion)", src: "vim" },
+
+  // Defaults: Editing
+  { mode: "n", key: "i", desc: "Insert before cursor", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "a", desc: "Insert after cursor", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "A", desc: "Insert at end of line", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "I", desc: "Insert at beginning of line", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "o", desc: "Open new line below", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "O", desc: "Open new line above", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "dd", desc: "Delete line", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "yy", desc: "Yank (copy) line", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "p", desc: "Paste after cursor", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "P", desc: "Paste before cursor", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "x", desc: "Delete character", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "r{char}", desc: "Replace character", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "ciw", desc: "Change inner word", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "diw", desc: "Delete inner word", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "yiw", desc: "Yank inner word", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "ci\"", desc: "Change inside quotes", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "ca{", desc: "Change around braces", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "v", key: "y", desc: "Yank selection", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "v", key: "d", desc: "Delete selection", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "v", key: ">", desc: "Indent selection", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "v", key: "<", desc: "Unindent selection", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: ">>", desc: "Indent line", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "<<", desc: "Unindent line", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "J", desc: "Join line below to current", cat: "Defaults (Editing)", src: "vim" },
+  { mode: "n", key: "~", desc: "Toggle case of character", cat: "Defaults (Editing)", src: "vim" },
+
+  // Defaults: Visual mode
+  { mode: "n", key: "v", desc: "Enter visual mode", cat: "Defaults (Visual)", src: "vim" },
+  { mode: "n", key: "V", desc: "Enter visual line mode", cat: "Defaults (Visual)", src: "vim" },
+  { mode: "n", key: "<C-v>", desc: "Enter visual block mode", cat: "Defaults (Visual)", src: "vim" },
+
+  // Defaults: Marks & registers
+  { mode: "n", key: "m{a-z}", desc: "Set mark", cat: "Defaults (Marks)", src: "vim" },
+  { mode: "n", key: "'{a-z}", desc: "Jump to mark (line)", cat: "Defaults (Marks)", src: "vim" },
+  { mode: "n", key: "\"{reg}y", desc: "Yank into register", cat: "Defaults (Marks)", src: "vim" },
+  { mode: "n", key: "\"{reg}p", desc: "Paste from register", cat: "Defaults (Marks)", src: "vim" },
+  { mode: "n", key: ":reg", desc: "View registers", cat: "Defaults (Marks)", src: "vim" },
+
+  // Defaults: Folding
+  { mode: "n", key: "za", desc: "Toggle fold", cat: "Defaults (Folding)", src: "vim" },
+  { mode: "n", key: "zR", desc: "Open all folds", cat: "Defaults (Folding)", src: "vim" },
+  { mode: "n", key: "zM", desc: "Close all folds", cat: "Defaults (Folding)", src: "vim" },
+  { mode: "n", key: "zo", desc: "Open fold", cat: "Defaults (Folding)", src: "vim" },
+  { mode: "n", key: "zc", desc: "Close fold", cat: "Defaults (Folding)", src: "vim" },
+
+  // Defaults: Tabs
+  { mode: "n", key: ":tabnew", desc: "Open new tab", cat: "Defaults (Tabs)", src: "vim" },
+  { mode: "n", key: "gt", desc: "Next tab", cat: "Defaults (Tabs)", src: "vim" },
+  { mode: "n", key: "gT", desc: "Previous tab", cat: "Defaults (Tabs)", src: "vim" },
+  { mode: "n", key: ":tabclose", desc: "Close tab", cat: "Defaults (Tabs)", src: "vim" },
+];
+
+const modeLabels = { n: "Normal", v: "Visual", i: "Insert", t: "Terminal", x: "Visual/Select", o: "Op-pending", s: "Select" };
+
+function renderModes(modeStr) {
+  return modeStr.split(",").map(m => {
+    const mt = m.trim();
+    const cls = `mode-${mt}`;
+    const label = modeLabels[mt] || mt;
+    return `<span class="mode-tag ${cls}" title="${label}">${mt.toUpperCase()}</span>`;
+  }).join("");
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function highlightText(text, query) {
+  if (!query) return escapeHtml(text);
+  const escaped = escapeHtml(text);
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return escaped.replace(re, '<mark>$1</mark>');
+}
+
+function render(query, modeFilter) {
+  const q = (query || "").toLowerCase();
+  const content = document.getElementById("content");
+  const empty = document.getElementById("empty");
+  const stats = document.getElementById("stats");
+
+  const filtered = BINDINGS.filter(b => {
+    if (modeFilter !== "all") {
+      const modes = b.mode.split(",").map(m => m.trim());
+      if (!modes.includes(modeFilter)) return false;
+    }
+    if (!q) return true;
+    const searchable = `${b.key} ${b.desc} ${b.cat} ${b.mode} ${b.src}`.toLowerCase();
+    return searchable.includes(q);
+  });
+
+  const grouped = {};
+  filtered.forEach(b => {
+    if (!grouped[b.cat]) grouped[b.cat] = [];
+    grouped[b.cat].push(b);
+  });
+
+  const cats = Object.keys(grouped);
+  stats.textContent = `${filtered.length} keybinding${filtered.length !== 1 ? 's' : ''} shown across ${cats.length} categor${cats.length !== 1 ? 'ies' : 'y'}`;
+  empty.style.display = cats.length === 0 ? "block" : "none";
+
+  content.innerHTML = cats.map(cat => `
+    <div class="category">
+      <div class="category-header">
+        <span>${escapeHtml(cat)}</span>
+        <span class="count">${grouped[cat].length}</span>
+      </div>
+      <table>
+        ${grouped[cat].map(b => `
+          <tr>
+            <td class="col-mode">${renderModes(b.mode)}</td>
+            <td class="col-key"><kbd>${highlightText(b.key, q)}</kbd></td>
+            <td class="col-desc">${highlightText(b.desc, q)}</td>
+            <td class="col-source">${escapeHtml(b.src)}</td>
+          </tr>
+        `).join("")}
+      </table>
+    </div>
+  `).join("");
+}
+
+// Search
+const searchInput = document.getElementById("search");
+let activeMode = "all";
+
+searchInput.addEventListener("input", () => render(searchInput.value, activeMode));
+
+// Mode filters
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeMode = btn.dataset.mode;
+    render(searchInput.value, activeMode);
+  });
+});
+
+// Keyboard shortcut: / to focus search
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== searchInput) {
+    e.preventDefault();
+    searchInput.focus();
+  }
+  if (e.key === "Escape" && document.activeElement === searchInput) {
+    searchInput.value = "";
+    render("", activeMode);
+    searchInput.blur();
+  }
+});
+
+// Initial render
+render("", "all");
+</script>
+</body>
+</html>
