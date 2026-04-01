@@ -1,3 +1,6 @@
+vim.api.nvim_create_user_command('Q', 'q<bang>', { bang = true, desc = 'Alias :Q to :q' })
+vim.api.nvim_create_user_command('W', 'w', { desc = 'Alias :W to :w' })
+
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Cmd+C in visual mode: yank only, no cut

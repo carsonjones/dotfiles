@@ -1,6 +1,7 @@
 return {
   {
     'zbirenbaum/copilot.lua',
+    enabled = not (vim.g.local_disabled_plugins and vim.g.local_disabled_plugins['zbirenbaum/copilot.lua']),
     event = 'InsertEnter',
     cmd = 'Copilot',
     config = function()

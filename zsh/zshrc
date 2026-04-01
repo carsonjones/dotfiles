@@ -170,6 +170,7 @@ cc-color() {
 }
 alias oc="opencode"
 alias :q="exit"
+alias :Q="exit"
 alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
 alias eqp='nvim ~/src/scripts/quick-prompt.md'
 
@@ -215,6 +216,7 @@ alias tl='tmux ls'
 alias ta='tmux attach -t'
 alias tn='tmux new -s'
 alias tk='tmux kill-session -t'
+alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
 
 ########################################
 # FUNCTIONS
