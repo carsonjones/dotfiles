@@ -211,7 +211,11 @@ return {
           dynamic_preview_title = true,
           path_display = { 'truncate' },
           mappings = {
-            i = { ['<C-t>'] = function(...) return require('trouble.sources.telescope').open(...) end },
+            i = {
+              ['<C-t>'] = function(...) return require('trouble.sources.telescope').open(...) end,
+              ['<S-Up>'] = function(...) return require('telescope.actions').cycle_history_prev(...) end,
+              ['<S-Down>'] = function(...) return require('telescope.actions').cycle_history_next(...) end,
+            },
             n = { ['<C-t>'] = function(...) return require('trouble.sources.telescope').open(...) end },
           },
           file_ignore_patterns = { '%.stories%.', '%.mock%.', '%.mocks%.', '__mocks__/', 'mocks/', '%.test%.', '%.spec%.', '__snapshots__/', '%.generated%.' },
