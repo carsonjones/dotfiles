@@ -216,6 +216,8 @@ alias tl='tmux ls'
 alias ta='tmux attach -t'
 alias tn='tmux new -s'
 alias tk='tmux kill-session -t'
+alias nv='nvim'
+alias nvd='nvim $(git diff --name-only HEAD)'
 alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
 
 ########################################
