@@ -77,7 +77,7 @@ return {
         callback = function(args)
           local client = vim.lsp.get_client_by_id(args.data.client_id)
           if client and client.name == 'astro' then
-            local ns = vim.lsp.diagnostic.get_namespace(args.data.client_id, true)
+            local ns = vim.lsp.diagnostic.get_namespace(args.data.client_id, 'publishDiagnostics')
             vim.diagnostic.config({
               virtual_text = {
                 format = function(diagnostic)
