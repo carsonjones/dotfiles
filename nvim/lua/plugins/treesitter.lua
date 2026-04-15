@@ -21,6 +21,9 @@ return {
     event = 'BufReadPost',
     opts = {
       max_lines = 3,
+      on_attach = function(bufnr)
+        return vim.bo[bufnr].filetype ~= 'markdown'
+      end,
     },
     keys = {
       { '<leader>tc', '<cmd>TSContextToggle<cr>', desc = '[T]oggle [C]ontext' },
