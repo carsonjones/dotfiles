@@ -219,12 +219,10 @@ return {
             n = { ['<C-t>'] = function(...) return require('trouble.sources.telescope').open(...) end },
           },
           file_ignore_patterns = { '%.stories%.', '%.mock%.', '%.mocks%.', '__mocks__/', 'mocks/', '%.test%.', '%.spec%.', '__snapshots__/', '%.generated%.' },
+          layout_strategy = 'bottom_pane',
           layout_config = {
-            width = 0.9,
-            height = 0.85,
-            horizontal = {
-              preview_width = 0.5,
-            },
+            height = 0.7,
+            preview_width = 0.55,
           },
           preview = {
             wrap = true,

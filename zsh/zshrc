@@ -47,6 +47,7 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 # Editor
 export EDITOR="nvim"
 export NVIM=~/.cache/nvim/server.pipe
+alias v='nvim'
 alias vf='nvim --server "$NVIM" --remote-tab $(fzf)'
 
 ########################################

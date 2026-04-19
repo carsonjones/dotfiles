@@ -12,6 +12,7 @@ return {
     }
 
     dashboard.section.buttons.val = {
+      dashboard.button('s', '  Restore session', function() require('persistence').load() end),
       dashboard.button('e', '  File tree', ':Neotree reveal<CR>'),
       dashboard.button('f', '  Find file', ':Telescope find_files<CR>'),
       dashboard.button('r', '  Recent files', ':Telescope oldfiles<CR>'),
