@@ -3,6 +3,13 @@ vim.api.nvim_create_user_command('W', 'w', { desc = 'Alias :W to :w' })
 
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+vim.keymap.set('n', '<C-d>', '<C-d>zz')
+vim.keymap.set('n', '<C-u>', '<C-u>zz')
+vim.keymap.set('n', '<C-f>', '<C-f>zz')
+vim.keymap.set('n', '<C-b>', '<C-b>zz')
+vim.keymap.set('n', '<S-Down>', '<S-Down>zz')
+vim.keymap.set('n', '<S-Up>', '<S-Up>zz')
+
 -- Cmd+C in visual mode: yank only, no cut
 vim.keymap.set('v', '<D-c>', 'y')
 vim.keymap.set('n', '<leader>?', function()

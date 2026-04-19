@@ -136,6 +136,13 @@ return {
       },
       { '<leader>fb', ':Telescope file_browser path=%:p:h select_buffer=true<CR>', desc = 'File [B]rowser' },
       {
+        '<leader>ds',
+        function()
+          require('telescope.builtin').lsp_document_symbols()
+        end,
+        desc = '[D]ocument [S]ymbols',
+      },
+      {
         '<leader>/',
         function()
           require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
