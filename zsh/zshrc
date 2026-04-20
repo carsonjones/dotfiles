@@ -48,7 +48,11 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 export EDITOR="nvim"
 export NVIM=~/.cache/nvim/server.pipe
 alias v='nvim'
-alias vf='nvim --server "$NVIM" --remote-tab $(fzf)'
+
+unalias vf 2>/dev/null
+vf() {
+  nvim --server "$NVIM" --remote-tab "$(fzf "$@")"
+}
 
 ########################################
 # POWERLEVEL10K INSTANT PROMPT
