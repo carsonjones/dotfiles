@@ -3,3 +3,4 @@
 !mcp.json.template
 .DS_Store
 nvim/.nvimlog
+nvim/lazy-lock.json
