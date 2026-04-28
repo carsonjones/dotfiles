@@ -2,6 +2,8 @@ return {
   'lewis6991/gitsigns.nvim',
   event = 'BufReadPre',
   opts = {
+    diff_opts = { internal = true },
+    word_diff = true,
     signs = {
       add = { text = '+' },
       change = { text = '~' },
@@ -10,6 +12,9 @@ return {
       changedelete = { text = '~' },
     },
     on_attach = function(bufnr)
+      vim.api.nvim_set_hl(0, 'GitSignsAddInline', { bg = '#344030' })
+      vim.api.nvim_set_hl(0, 'GitSignsDeleteInline', { bg = '#4a2f2f' })
+      vim.api.nvim_set_hl(0, 'GitSignsChangeInline', { bg = '#2f3448' })
       local gs = require 'gitsigns'
       local map = function(mode, l, r, desc)
         vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc })
