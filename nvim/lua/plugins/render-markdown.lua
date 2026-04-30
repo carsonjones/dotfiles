@@ -13,5 +13,8 @@ return {
     bullet = {
       icons = { '⏺', '○', '◆', '◇' },
     },
+    strikethrough = {
+      enabled = false,
+    },
   },
 }
