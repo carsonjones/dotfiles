@@ -51,7 +51,15 @@ alias v='nvim'
 
 unalias vf 2>/dev/null
 vf() {
-  nvim --server "$NVIM" --remote-tab "$(fzf "$@")"
+  local selected
+
+  if (( $# == 0 )) || [[ "$1" == -* ]]; then
+    selected="$(fzf "$@")"
+  else
+    selected="$(fzf -q "$*")"
+  fi
+
+  [[ -n "$selected" ]] && nvim --server "$NVIM" --remote-tab "$selected"
 }
 
 ########################################
