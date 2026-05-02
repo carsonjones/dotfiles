@@ -63,7 +63,8 @@ vf() {
 }
 
 scratch() {
-  local file="$HOME/main/scratch/$(date +%Y-%m-%d)-${1}.md"
+  local date="$(date +%Y-%m-%d)"
+  local file="$HOME/main/scratch/${date}${1:+-${1}}.md"
   mkdir -p "$HOME/main/scratch"
   nvim "$file"
 }
