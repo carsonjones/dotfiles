@@ -62,6 +62,12 @@ vf() {
   [[ -n "$selected" ]] && nvim --server "$NVIM" --remote-tab "$selected"
 }
 
+scratch() {
+  local file="$HOME/main/scratch/$(date +%Y-%m-%d)-${1}.md"
+  mkdir -p "$HOME/main/scratch"
+  nvim "$file"
+}
+
 ########################################
 # POWERLEVEL10K INSTANT PROMPT
 ########################################
@@ -173,6 +179,7 @@ command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 alias ls='ls -G'
 alias hist='histdb'
 alias zsh="nvim ~/.zshrc"
+alias zshlocal="nvim ~/.zshrc.local"
 alias savezsh="source ~/.zshrc"
 alias edit="zed"
 alias cc="claude"
