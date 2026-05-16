@@ -163,9 +163,6 @@ command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 # rust
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
-# zoxide
-command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
-
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
@@ -273,3 +270,6 @@ export LANG=en_US.UTF-8
 # Source local config for sensitive values and machine-specific settings
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 eval "$(mise activate zsh)"
+
+# zoxide should be initialized last to avoid hook ordering issues.
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"

@@ -1,12 +1,15 @@
-theme = adwaita dark
+theme = cursor dark
+# palette = 1=#E06C75
+background = 252A34
+
 window-colorspace = "display-p3"
-background = 272C35
 
 font-size = 18
 adjust-cell-height = 15%
 
-background-opacity = .95
+background-opacity = .96
 background-blur-radius = 20
+unfocused-split-opacity = 1.0
 
 mouse-hide-while-typing = true
 
