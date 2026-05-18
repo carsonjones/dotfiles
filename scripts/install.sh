@@ -189,6 +189,16 @@ if ! $MINIMAL; then
     ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
 fi
 
+# Link prise config
+echo "Linking prise config..."
+mkdir -p ~/.config/prise
+ln -sf "$DOTFILES/prise/init.lua" ~/.config/prise/init.lua
+
+# Link comview config
+echo "Linking comview config..."
+mkdir -p ~/.config/comview
+ln -sf "$DOTFILES/comview/config.json" ~/.config/comview/config.json
+
 # Link tmux config
 echo "Linking tmux config..."
 mkdir -p ~/.config/tmux

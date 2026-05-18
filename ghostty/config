@@ -1,6 +1,7 @@
 theme = cursor dark
 # palette = 1=#E06C75
 background = 252A34
+selection-background = 3D5A80
 
 window-colorspace = "display-p3"
 
@@ -21,7 +22,7 @@ macos-icon-ghost-color = 21272b
 macos-icon-screen-color = 000000
 
 window-padding-x = 7,12
-window-padding-y = 7,12
+window-padding-y = 7,4
 
 keybind = alt+left=esc:B
 keybind = alt+right=esc:F

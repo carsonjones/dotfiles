@@ -1,14 +1,30 @@
 vim.api.nvim_create_user_command('Q', 'q<bang>', { bang = true, desc = 'Alias :Q to :q' })
 vim.api.nvim_create_user_command('W', 'w', { desc = 'Alias :W to :w' })
 
+local function centered_line_move(key)
+  return function()
+    local keys = vim.api.nvim_replace_termcodes(key, true, false, true)
+    vim.api.nvim_feedkeys(keys, 'n', false)
+
+    local line = vim.fn.line '.'
+    local last = vim.fn.line '$'
+    local win_h = vim.fn.winheight(0)
+    local margin = math.floor(win_h / 2)
+
+    if line > margin and line < (last - margin) then
+      vim.cmd.normal { args = { 'zz' }, bang = true }
+    end
+  end
+end
+
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 vim.keymap.set('n', '<C-d>', '<C-d>zz')
 vim.keymap.set('n', '<C-u>', '<C-u>zz')
 vim.keymap.set('n', '<C-f>', '<C-f>zz')
 vim.keymap.set('n', '<C-b>', '<C-b>zz')
-vim.keymap.set('n', '<S-Down>', '<S-Down>zz')
-vim.keymap.set('n', '<S-Up>', '<S-Up>zz')
+vim.keymap.set('n', '<S-Down>', centered_line_move '<S-Down>')
+vim.keymap.set('n', '<S-Up>', centered_line_move '<S-Up>')
 
 -- Cmd+C in visual mode: yank only, no cut
 vim.keymap.set('v', '<D-c>', 'y')

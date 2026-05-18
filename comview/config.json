@@ -1,0 +1,7 @@
+{
+  "wrap": true,
+  "keybindings": {
+    "half_page_down": ["ctrl+d", "Page_Down", "shift+Down"],
+    "half_page_up":   ["ctrl+u", "Page_Up",   "shift+Up"]
+  }
+}
