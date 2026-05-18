@@ -45,7 +45,7 @@ fi
 
 # Core tools (always installed)
 echo "Installing core tools..."
-brew install git neovim fzf zoxide ripgrep fd bat gh tmux zsh lazygit sqlite3
+brew install git neovim fzf zoxide ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
 
 # Set zsh as default shell
 if [[ "$SHELL" != *"zsh"* ]]; then
@@ -189,10 +189,10 @@ if ! $MINIMAL; then
     ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
 fi
 
-# Link prise config
-echo "Linking prise config..."
-mkdir -p ~/.config/prise
-ln -sf "$DOTFILES/prise/init.lua" ~/.config/prise/init.lua
+# Link zellij config (replaces prise)
+echo "Linking zellij config..."
+mkdir -p ~/.config/zellij
+ln -sf "$DOTFILES/zellij/config.kdl" ~/.config/zellij/config.kdl
 
 # Link comview config
 echo "Linking comview config..."
