@@ -241,6 +241,7 @@ alias src="cd ~/src"
 alias main="cd ~/main"
 alias jonze="cd ~/src/jonze"
 alias dotfiles="cd ~/src/dotfiles"
+alias config="cd ~/.config"
 
 ## Git
 alias gadd="git add ."
