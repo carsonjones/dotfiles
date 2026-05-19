@@ -174,13 +174,37 @@ command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 ########################################
 
 ## General
-__smart_exit() {
-  if command -v zellij >/dev/null 2>&1 && zellij action detach >/dev/null 2>&1; then
-    return 0
+__zellij_is_last_pane() {
+  [[ -n "${ZELLIJ:-}" ]] || return 1
+
+  local panes_json pane_count
+  panes_json="$(zellij action list-panes --json --state 2>/dev/null)" || return 1
+
+  if command -v jq >/dev/null 2>&1; then
+    pane_count="$(
+      printf '%s' "$panes_json" | jq -r '
+        if type == "array" then
+          map(select((.is_exited // false) | not)) | length
+        elif type == "object" and has("panes") then
+          [.panes[] | select((.is_exited // false) | not)] | length
+        else
+          0
+        end
+      ' 2>/dev/null
+    )"
+  else
+    pane_count="$(printf '%s' "$panes_json" | rg -c '"pane_id"' 2>/dev/null)"
   fi
-  if [[ -n "${ZELLIJ:-}" ]]; then
-    zellij action detach >/dev/null 2>&1
-    return $?
+
+  [[ "$pane_count" == "1" ]]
+}
+
+__smart_exit() {
+  if [[ -n "${ZELLIJ:-}" ]] && command -v zellij >/dev/null 2>&1; then
+    if __zellij_is_last_pane; then
+      zellij action detach >/dev/null 2>&1
+      return $?
+    fi
   fi
   builtin exit "$@"
 }
@@ -200,6 +224,8 @@ cc-color() {
 alias oc="opencode"
 alias :q="__smart_exit"
 alias :Q="__smart_exit"
+alias review='git diff | comview'
+alias review-staged='git diff --staged | comview'
 alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
 alias eqp='nvim ~/src/scripts/quick-prompt.md'
 
@@ -263,6 +289,108 @@ alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
 ########################################
 # FUNCTIONS
 ########################################
+
+__copy_to_clipboard() {
+  if command -v pbcopy >/dev/null 2>&1; then
+    printf '%s' "$1" | pbcopy
+  elif command -v wl-copy >/dev/null 2>&1; then
+    printf '%s' "$1" | wl-copy
+  elif command -v xclip >/dev/null 2>&1; then
+    printf '%s' "$1" | xclip -selection clipboard
+  else
+    return 1
+  fi
+}
+
+__open_url() {
+  if command -v open >/dev/null 2>&1; then
+    open "$1"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$1"
+  else
+    return 1
+  fi
+}
+
+web() {
+  local dir="."
+  local port="8080"
+  local should_open=0
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --open|-o)
+        should_open=1
+        shift
+        ;;
+      --port|-p)
+        if [[ -z "$2" ]]; then
+          echo "Missing port value for $1" >&2
+          return 1
+        fi
+        port="$2"
+        shift 2
+        ;;
+      *)
+        dir="$1"
+        shift
+        ;;
+    esac
+  done
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 is required for web/serve" >&2
+    return 1
+  fi
+
+  if [[ ! -d "$dir" ]]; then
+    echo "Directory not found: $dir" >&2
+    return 1
+  fi
+
+  local abs_dir
+  abs_dir="$(cd "$dir" && pwd)"
+
+  local html_path
+  html_path="$(
+    SERVE_DIR_ROOT="$abs_dir" python3 - <<'PY'
+from pathlib import Path
+from urllib.parse import quote
+import os
+
+root = Path(os.environ["SERVE_DIR_ROOT"]).resolve()
+files = [p for p in root.rglob("*") if p.is_file() and p.suffix.lower() in {".html", ".htm"}]
+
+if files:
+    latest = max(files, key=lambda p: p.stat().st_mtime)
+    print(quote(latest.relative_to(root).as_posix()))
+PY
+  )"
+
+  local url="http://localhost:${port}/"
+  if [[ -n "$html_path" ]]; then
+    url="${url}${html_path}"
+  fi
+
+  echo "Serving ${abs_dir} at http://localhost:${port}"
+
+  if __copy_to_clipboard "$url"; then
+    echo "Copied to clipboard: $url"
+  else
+    echo "URL: $url"
+  fi
+
+  if (( should_open )); then
+    __open_url "$url" >/dev/null 2>&1 || echo "Couldn't open browser automatically" >&2
+  fi
+
+  (
+    cd "$abs_dir" || exit 1
+    python3 -m http.server "$port"
+  )
+}
+
+alias serve='web'
 
 getCurrentBranch() {
   local current_branch_name=$(git symbolic-ref -q HEAD)
