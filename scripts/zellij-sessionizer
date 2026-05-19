@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-SEARCH_PATHS=(${ZELLIJ_SESSIONIZER_SEARCH_PATHS:-"$HOME/src $HOME/main"})
-SPECIFIC_PATHS=(${ZELLIJ_SESSIONIZER_SPECIFIC_PATHS:-"$HOME/src/dotfiles $HOME/src/dotfiles/nvim"})
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_ROOT="${DOTFILES:-$(cd -- "$SCRIPT_DIR/.." && pwd)}"
+SEARCH_PATHS_DEFAULT="$HOME/src $HOME/main"
+SPECIFIC_PATHS_DEFAULT="$DOTFILES_ROOT $DOTFILES_ROOT/nvim"
+IFS=' ' read -r -a SEARCH_PATHS <<< "${ZELLIJ_SESSIONIZER_SEARCH_PATHS:-$SEARCH_PATHS_DEFAULT}"
+IFS=' ' read -r -a SPECIFIC_PATHS <<< "${ZELLIJ_SESSIONIZER_SPECIFIC_PATHS:-$SPECIFIC_PATHS_DEFAULT}"
 OS_TYPE="${ZELLIJ_SESSIONIZER_OS_TYPE:-"$(uname)"}"
-ZELLIJ_SWITCH_PLUGIN="${ZELLIJ_SESSIONIZER_SWITCH_PLUGIN:-"https://github.com/mostafaqanbaryan/zellij-switch/releases/download/0.2.1/zellij-switch.wasm"}"
 
 get_atime() {
-	local dir="$0"
+	local dir="$1"
 	if [[ "$OS_TYPE" == "Linux" ]]; then
 		stat -c "%X" "$dir" 2>/dev/null || echo "0"
 	else
@@ -14,88 +17,27 @@ get_atime() {
 	fi
 }
 
-# Handle special arguments
-if [[ "$1" == "--generate-list" ]]; then
-  generate_display_list() {
-    # Collect all directories
-    local all_dirs=()
+select_dir() {
+  local selected_dir="$1"
+  local session_name
+  local session_line
+  session_name=$(basename "$selected_dir")
 
-    # Add first-level directories from SEARCH_PATHS
-    for search_path in "${SEARCH_PATHS[@]}"; do
-      if [[ -d "$search_path" ]]; then
-        for dir in "$search_path"/*; do
-          if [[ -d "$dir" ]]; then
-            all_dirs+=("$dir")
-          fi
-        done
+  if [[ -n "${ZELLIJ:-}" ]]; then
+    zellij action switch-session --cwd "$selected_dir" "$session_name"
+  else
+    session_line="$(zellij list-sessions --no-formatting 2>/dev/null | rg "^${session_name}(\\s|$)" | head -n 1)"
+
+    if [[ -n "$session_line" && "$session_line" != *"(EXITED"* ]]; then
+      zellij attach "$session_name"
+    else
+      if [[ -n "$session_line" && "$session_line" == *"(EXITED"* ]]; then
+        zellij delete-session "$session_name" --force >/dev/null 2>&1
       fi
-    done
-
-    # Add SPECIFIC_PATHS
-    for specific_path in "${SPECIFIC_PATHS[@]}"; do
-      if [[ -d "$specific_path" ]]; then
-        all_dirs+=("$specific_path")
-      fi
-    done
-
-    # Sort directories by last access time (most recent first)
-    local temp_file=$(mktemp)
-    for dir in "${all_dirs[@]}"; do
-      # Get access time in seconds since epoch
-      local atime=$(get_atime "$dir")
-      echo "$atime $dir" >> "$temp_file"
-    done
-
-    # Sort by access time (descending) and extract directory names
-    local sorted_dirs=()
-    while IFS= read -r line; do
-      # Extract directory name (everything after the first space)
-      local dir_name="${line#* }"
-      sorted_dirs+=("$dir_name")
-    done < <(sort -nr "$temp_file")
-
-    # Clean up temporary file
-    rm "$temp_file"
-
-    # Get zellij session information
-    declare -A session_status
-    if command -v zellij >/dev/null 2>&1; then
-      while IFS= read -r line; do
-        if [[ -n "$line" ]]; then
-          # Extract session name (first word)
-          local session_name=$(echo "$line" | awk '{print $1}')
-          
-          # Determine status with colors
-          if [[ "$line" == *"(current)"* ]]; then
-            session_status["$session_name"]=" $(tput setaf 2)(current)$(tput sgr0)"
-          elif [[ "$line" == *"(EXITED"* ]]; then
-            session_status["$session_name"]=" $(tput setaf 1)(exited)$(tput sgr0)"
-          else
-            session_status["$session_name"]=" $(tput setaf 3)(active)$(tput sgr0)"
-          fi
-        fi
-      done < <(zellij ls -n 2>/dev/null)
+      zellij attach --create "$session_name"
     fi
-
-    # Create display names by replacing $HOME with ~ and adding session status
-    for dir in "${sorted_dirs[@]}"; do
-      local display_name=$(echo "$dir" | sed "s|^$HOME|~|")
-      
-      # Get session name from directory basename
-      local session_name=$(basename "$dir")
-      
-      # Add session status if it exists
-      if [[ -n "${session_status[$session_name]}" ]]; then
-        display_name="${display_name}${session_status[$session_name]}"
-      fi
-      
-      echo "$display_name"
-    done
-  }
-  
-  generate_display_list
-  exit 0
-fi
+  fi
+}
 
 # Function to extract session name from display line
 extract_session_name() {
@@ -111,12 +53,9 @@ extract_session_name() {
   basename "$full_path"
 }
 
-# Function to generate the display list
-generate_display_list() {
-  # Collect all directories
+collect_dirs() {
   local all_dirs=()
 
-  # Add first-level directories from SEARCH_PATHS
   for search_path in "${SEARCH_PATHS[@]}"; do
     if [[ -d "$search_path" ]]; then
       for dir in "$search_path"/*; do
@@ -127,67 +66,112 @@ generate_display_list() {
     fi
   done
 
-  # Add SPECIFIC_PATHS
   for specific_path in "${SPECIFIC_PATHS[@]}"; do
     if [[ -d "$specific_path" ]]; then
       all_dirs+=("$specific_path")
     fi
   done
 
-  # Sort directories by last access time (most recent first)
+  printf '%s\n' "${all_dirs[@]}"
+}
+
+get_session_status_suffix() {
+  local session_name="$1"
+  local line
+
+  command -v zellij >/dev/null 2>&1 || return 0
+
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    [[ "$(echo "$line" | awk '{print $1}')" == "$session_name" ]] || continue
+
+    if [[ "$line" == *"(current)"* ]]; then
+      printf ' %s(current)%s' "$(tput setaf 2)" "$(tput sgr0)"
+    elif [[ "$line" == *"(EXITED"* ]]; then
+      printf ' %s(exited)%s' "$(tput setaf 1)" "$(tput sgr0)"
+    else
+      printf ' %s(active)%s' "$(tput setaf 3)" "$(tput sgr0)"
+    fi
+    return 0
+  done < <(zellij ls -n 2>/dev/null)
+}
+
+# Function to generate the display list
+generate_display_list() {
+  local all_dirs=()
+  local dir
+
+  while IFS= read -r dir; do
+    [[ -n "$dir" ]] && all_dirs+=("$dir")
+  done < <(collect_dirs)
+
   local temp_file=$(mktemp)
   for dir in "${all_dirs[@]}"; do
-    # Get access time in seconds since epoch
     local atime=$(get_atime "$dir")
     echo "$atime $dir" >> "$temp_file"
   done
 
-  # Sort by access time (descending) and extract directory names
   local sorted_dirs=()
   while IFS= read -r line; do
-    # Extract directory name (everything after the first space)
     local dir_name="${line#* }"
     sorted_dirs+=("$dir_name")
   done < <(sort -nr "$temp_file")
 
-  # Clean up temporary file
-  rm "$temp_file"
+  rm -f "$temp_file"
 
-  # Get zellij session information
-  declare -A session_status
-  if command -v zellij >/dev/null 2>&1; then
-    while IFS= read -r line; do
-      if [[ -n "$line" ]]; then
-        # Extract session name (first word)
-        local session_name=$(echo "$line" | awk '{print $1}')
-        
-        # Determine status with colors
-        if [[ "$line" == *"(current)"* ]]; then
-          session_status["$session_name"]=" $(tput setaf 2)(current)$(tput sgr0)"
-        elif [[ "$line" == *"(EXITED"* ]]; then
-          session_status["$session_name"]=" $(tput setaf 1)(exited)$(tput sgr0)"
-        else
-          session_status["$session_name"]=" $(tput setaf 3)(active)$(tput sgr0)"
-        fi
-      fi
-    done < <(zellij ls -n 2>/dev/null)
-  fi
-
-  # Create display names by replacing $HOME with ~ and adding session status
   for dir in "${sorted_dirs[@]}"; do
     local display_name=$(echo "$dir" | sed "s|^$HOME|~|")
-    
-    # Get session name from directory basename
     local session_name=$(basename "$dir")
-    
-    # Add session status if it exists
-    if [[ -n "${session_status[$session_name]}" ]]; then
-      display_name="${display_name}${session_status[$session_name]}"
+    local status_suffix
+
+    status_suffix=$(get_session_status_suffix "$session_name")
+    if [[ -n "$status_suffix" ]]; then
+      display_name="${display_name}${status_suffix}"
     fi
-    
+
     echo "$display_name"
   done
 }
+
+get_most_recent_dir() {
+  local all_dirs=()
+  local dir
+
+  while IFS= read -r dir; do
+    [[ -n "$dir" ]] && all_dirs+=("$dir")
+  done < <(collect_dirs)
+
+  local temp_file
+  temp_file=$(mktemp)
+  for dir in "${all_dirs[@]}"; do
+    local atime
+    atime=$(get_atime "$dir")
+    echo "$atime $dir" >> "$temp_file"
+  done
+
+  local most_recent_dir
+  most_recent_dir=$(sort -nr "$temp_file" | head -n 1 | cut -d' ' -f2-)
+  rm -f "$temp_file"
+
+  if [[ -n "$most_recent_dir" ]]; then
+    printf '%s\n' "$most_recent_dir"
+  fi
+}
+
+if [[ "$1" == "--generate-list" ]]; then
+  generate_display_list
+  exit 0
+fi
+
+if [[ "$1" == "--most-recent" ]]; then
+  selected_dir=$(get_most_recent_dir)
+  if [[ -z "$selected_dir" ]]; then
+    exit 0
+  fi
+
+  select_dir "$selected_dir"
+  exit 0
+fi
 
 # Create a temporary script for session operations
 temp_script=$(mktemp)
@@ -253,13 +237,4 @@ else
 fi
 
 # Create session name from directory basename
-session_name=$(basename "$selected_dir")
-
-# Change to session
-if [[ -v "$ZELLIJ" ]]; then
-  # if we are in a zellij session
-  zellij pipe --plugin "$ZELLIJ_SWITCH_PLUGIN" -- "--session $session_name --cwd $selected_dir"
-else
-  # if we are not in a zellij session
-  zellij attach "$session_name" --create
-fi
+select_dir "$selected_dir"

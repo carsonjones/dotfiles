@@ -169,42 +169,19 @@ command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 # local bin
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 
+if command -v zellij >/dev/null 2>&1 && [ -f "$HOME/src/dotfiles/zsh/zshrc.zellij" ]; then
+  source "$HOME/src/dotfiles/zsh/zshrc.zellij"
+fi
+
 ########################################
 # ALIASES
 ########################################
 
 ## General
-__zellij_is_last_pane() {
-  [[ -n "${ZELLIJ:-}" ]] || return 1
-
-  local panes_json pane_count
-  panes_json="$(zellij action list-panes --json --state 2>/dev/null)" || return 1
-
-  if command -v jq >/dev/null 2>&1; then
-    pane_count="$(
-      printf '%s' "$panes_json" | jq -r '
-        if type == "array" then
-          map(select((.is_exited // false) | not)) | length
-        elif type == "object" and has("panes") then
-          [.panes[] | select((.is_exited // false) | not)] | length
-        else
-          0
-        end
-      ' 2>/dev/null
-    )"
-  else
-    pane_count="$(printf '%s' "$panes_json" | rg -c '"pane_id"' 2>/dev/null)"
-  fi
-
-  [[ "$pane_count" == "1" ]]
-}
-
 __smart_exit() {
   if [[ -n "${ZELLIJ:-}" ]] && command -v zellij >/dev/null 2>&1; then
-    if __zellij_is_last_pane; then
-      zellij action detach >/dev/null 2>&1
-      return $?
-    fi
+    zellij action detach >/dev/null 2>&1
+    return $?
   fi
   builtin exit "$@"
 }
@@ -267,15 +244,6 @@ alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_des
 
 ## Tools
 alias z="zoxide"
-alias zj="zellij"
-zr() {
-  local args=()
-  if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
-    args=(--session "$ZELLIJ_SESSION_NAME")
-  fi
-  zellij "${args[@]}" action start-or-reload-plugin file:/Users/jones/src/dotfiles/zellij/plugins/zjstatus.wasm &&
-    zellij "${args[@]}" action override-layout /Users/jones/src/dotfiles/zellij/layouts/zjstatus.kdl
-}
 alias lg="lazygit"
 alias tl='tmux ls'
 alias ta='tmux attach -t'
