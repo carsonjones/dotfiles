@@ -169,8 +169,10 @@ command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 # local bin
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 
-if command -v zellij >/dev/null 2>&1 && [ -f "$HOME/src/dotfiles/zsh/zshrc.zellij" ]; then
-  source "$HOME/src/dotfiles/zsh/zshrc.zellij"
+typeset -g DOTFILES_ROOT="${DOTFILES:-${${(%):-%x}:A:h:h}}"
+
+if command -v zellij >/dev/null 2>&1 && [ -f "$DOTFILES_ROOT/zsh/zshrc.zellij" ]; then
+  source "$DOTFILES_ROOT/zsh/zshrc.zellij"
 fi
 
 ########################################
