@@ -32,7 +32,7 @@ themes {
         }
         text_selected {
             base 171 178 191
-            background 37 42 52
+            background 61 90 128
             emphasis_0 209 154 102
             emphasis_1 86 182 194
             emphasis_2 152 195 121

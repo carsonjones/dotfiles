@@ -182,7 +182,31 @@ fi
 ## General
 __smart_exit() {
   if [[ -n "${ZELLIJ:-}" ]] && command -v zellij >/dev/null 2>&1; then
-    zellij action detach >/dev/null 2>&1
+    local panes_json pane_count
+    panes_json="$(zellij action list-panes --json --state --tab 2>/dev/null)"
+
+    if command -v jq >/dev/null 2>&1 && [[ -n "$panes_json" ]]; then
+      pane_count="$(printf '%s' "$panes_json" | jq -r '
+        def panes: if type == "array" then . elif type == "object" and has("panes") then .panes else [] end;
+        panes as $panes
+        | ($panes | map(select((.is_focused // false) and ((.is_exited // false) | not))) | first) as $focused
+        | if $focused == null then 0
+          else $panes | map(select((.is_exited // false | not) and (
+            if ($focused.tab_position? // null) != null and (.tab_position? // null) != null then .tab_position == $focused.tab_position
+            elif ($focused.tab_id? // null) != null and (.tab_id? // null) != null then .tab_id == $focused.tab_id
+            elif ($focused.tab_name? // null) != null and (.tab_name? // null) != null then .tab_name == $focused.tab_name
+            else .pane_id == $focused.pane_id end))) | length
+          end
+      ' 2>/dev/null)"
+    fi
+
+    if [[ "${pane_count:-0}" -gt 1 ]]; then
+      zellij action close-pane >/dev/null 2>&1
+    elif __zellij_is_last_pane; then
+      zellij action detach >/dev/null 2>&1
+    else
+      zellij action close-tab >/dev/null 2>&1
+    fi
     return $?
   fi
   builtin exit "$@"

@@ -139,6 +139,30 @@ zjn() {
   fi
 }
 
+__zj_set_tab_name() {
+  [[ -n "${ZELLIJ:-}" ]] || return
+  local base candidate n tabs_json other_names
+  base="$(basename "$PWD")"
+
+  tabs_json="$(zellij action list-tabs --json 2>/dev/null)"
+
+  if [[ -n "$tabs_json" ]] && command -v jq >/dev/null 2>&1; then
+    other_names="$(printf '%s' "$tabs_json" | jq -r '.[] | select(.active // false | not) | .name // empty' 2>/dev/null)"
+    candidate="$base"
+    n=2
+    while printf '%s\n' "$other_names" | grep -qx "$candidate"; do
+      candidate="${base} ${n}"
+      (( n++ ))
+    done
+  else
+    candidate="$base"
+  fi
+
+  zellij action rename-tab "$candidate" 2>/dev/null
+}
+add-zsh-hook chpwd __zj_set_tab_name
+__zj_set_tab_name
+
 zr() {
   local dotfiles_root="${DOTFILES:-$HOME/src/dotfiles}"
   local args=()
