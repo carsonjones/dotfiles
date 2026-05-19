@@ -14,7 +14,7 @@ layout {
 
                 hide_frame_for_single_pane "false"
 
-                mode_normal       "#[bg=#252A34,fg=#7C7F85] {name} "
+                mode_normal       ""
                 mode_locked       "#[bg=#252A34,fg=#abb2bf,bold] {name} "
                 mode_tmux         "#[bg=#252A34,fg=#e5c07b,bold] {name} "
                 mode_session      "#[bg=#252A34,fg=#56b6c2,bold] {name} "
