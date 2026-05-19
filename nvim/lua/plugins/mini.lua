@@ -7,7 +7,19 @@ return {
     require('mini.comment').setup()
     require('mini.cursorword').setup()
 
-    vim.opt.winbar = "%#LineNr#  %f  %m%="
+    vim.api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
+      group = vim.api.nvim_create_augroup('winbar-file-only', { clear = true }),
+      callback = function()
+        local bt = vim.bo.buftype
+        local ft = vim.bo.filetype
+        local name = vim.api.nvim_buf_get_name(0)
+        if bt == '' and ft ~= 'neo-tree' and name ~= '' then
+          vim.opt_local.winbar = "%#LineNr#  %f  %m%="
+        else
+          vim.opt_local.winbar = ''
+        end
+      end,
+    })
 
     local statusline = require 'mini.statusline'
     statusline.setup {

@@ -21,8 +21,8 @@ return {
       },
     },
     source_selector = {
-      winbar = true,
-      show_scrolled_off_parent_node = true,
+      winbar = false,
+      statusbar = false,
     },
     hijack_netrw_behavior = 'disabled',
     window = {

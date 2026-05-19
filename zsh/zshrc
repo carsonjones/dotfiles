@@ -276,7 +276,6 @@ zr() {
   zellij "${args[@]}" action start-or-reload-plugin file:/Users/jones/src/dotfiles/zellij/plugins/zjstatus.wasm &&
     zellij "${args[@]}" action override-layout /Users/jones/src/dotfiles/zellij/layouts/zjstatus.kdl
 }
-alias zc='rm -rf "$HOME/Library/Caches/org.Zellij-Contributors.Zellij"'
 alias lg="lazygit"
 alias tl='tmux ls'
 alias ta='tmux attach -t'
