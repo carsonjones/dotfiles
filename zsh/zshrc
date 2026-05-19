@@ -174,6 +174,17 @@ command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 ########################################
 
 ## General
+__smart_exit() {
+  if command -v zellij >/dev/null 2>&1 && zellij action detach >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ -n "${ZELLIJ:-}" ]]; then
+    zellij action detach >/dev/null 2>&1
+    return $?
+  fi
+  builtin exit "$@"
+}
+
 alias ls='ls -G'
 alias hist='histdb'
 alias zsh="nvim ~/.zshrc"
@@ -187,8 +198,8 @@ cc-color() {
   printf '/color %s\n' "$color" | claude "$@"
 }
 alias oc="opencode"
-alias :q="exit"
-alias :Q="exit"
+alias :q="__smart_exit"
+alias :Q="__smart_exit"
 alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
 alias eqp='nvim ~/src/scripts/quick-prompt.md'
 
@@ -230,6 +241,16 @@ alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_des
 
 ## Tools
 alias z="zoxide"
+alias zj="zellij"
+zr() {
+  local args=()
+  if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
+    args=(--session "$ZELLIJ_SESSION_NAME")
+  fi
+  zellij "${args[@]}" action start-or-reload-plugin file:/Users/jones/src/dotfiles/zellij/plugins/zjstatus.wasm &&
+    zellij "${args[@]}" action override-layout /Users/jones/src/dotfiles/zellij/layouts/zjstatus.kdl
+}
+alias zc='rm -rf "$HOME/Library/Caches/org.Zellij-Contributors.Zellij"'
 alias lg="lazygit"
 alias tl='tmux ls'
 alias ta='tmux attach -t'

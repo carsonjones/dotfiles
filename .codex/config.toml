@@ -1,0 +1,92 @@
+personality = "pragmatic"
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+
+[projects."/Users/jones/src/nhl-tui"]
+trust_level = "untrusted"
+
+[projects."/Users/jones/src/projects/freezing"]
+trust_level = "trusted"
+
+[projects."/Users/jones"]
+trust_level = "untrusted"
+
+[projects."/Users/jones/src/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/jones/src/home/jonze"]
+trust_level = "trusted"
+
+[projects."/Users/jones/src/projects/nhl/nhl-tui"]
+trust_level = "trusted"
+
+[projects."/Users/jones/main"]
+trust_level = "trusted"
+
+[projects."/Users/jones/src/projects/nhl/puck"]
+trust_level = "trusted"
+
+[projects."/Users/jones/src/projects/perks"]
+trust_level = "trusted"
+
+[projects."/Users/jones/src/sandbox/comview"]
+trust_level = "trusted"
+
+[notice.model_migrations]
+"gpt-5.2-codex" = "gpt-5.3-codex"
+
+[tui]
+theme = "base16-eighties-dark"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[marketplaces.openai-bundled]
+last_updated = "2026-05-19T01:07:39Z"
+source_type = "local"
+source = "/Users/jones/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-05-15T18:41:06Z"
+source_type = "local"
+source = "/Users/jones/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[[hooks.PermissionRequest]]
+matcher = ".*"
+
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = 'sh /Users/jones/src/dotfiles/.codex/hooks/zellij-waiting.sh'
+timeout = 10
+statusMessage = "Marking Zellij tab waiting"
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = 'sh /Users/jones/src/dotfiles/.codex/hooks/zellij-completed.sh'
+timeout = 10
+statusMessage = "Marking Zellij tab completed"
+
+[hooks.state]
+
+[hooks.state."/Users/jones/.codex/config.toml:permission_request:0:0"]
+trusted_hash = "sha256:db34ab5f728203e3785eae0f125997b93779774fea0815d19fbdcd92f4ad92da"
+
+[hooks.state."/Users/jones/.codex/config.toml:stop:0:0"]
+trusted_hash = "sha256:6d13209243093303d029f6fe07cb21299670fdf18e1eee4a0957e69b49457b6d"

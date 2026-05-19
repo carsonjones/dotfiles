@@ -1,11 +1,45 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "WebSearch"
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "bunx -y ccstatusline@latest",
     "padding": 0
   },
+  "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
   "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -n \"$ZELLIJ_PANE_ID\" ]; then zellij pipe --name \"zellij-attention::waiting::$ZELLIJ_PANE_ID\"; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -n \"$ZELLIJ_PANE_ID\" ]; then zellij pipe --name \"zellij-attention::completed::$ZELLIJ_PANE_ID\"; fi"
+          }
+        ]
+      }
+    ]
+  },
   "feedbackSurveyState": {
     "lastShownTime": 1754086247817
   }

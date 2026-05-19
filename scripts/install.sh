@@ -217,6 +217,10 @@ ln -sf "$DOTFILES/claude/settings.json" ~/.claude/settings.json
 ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$DOTFILES/claude/mcp_settings.json" ~/.claude/mcp_settings.json
 
+# Link codex config
+echo "Linking codex config..."
+ln -sfn "$DOTFILES/.codex" ~/.codex
+
 # Cursor config (template - needs manual setup)
 if ! $MINIMAL; then
     echo "Cursor MCP template at $DOTFILES/cursor/mcp.json.template"
