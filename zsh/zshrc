@@ -62,6 +62,7 @@ vf() {
   [[ -n "$selected" ]] && nvim --server "$NVIM" --remote-tab "$selected"
 }
 
+unalias scratch 2>/dev/null
 scratch() {
   local date="$(date +%Y-%m-%d)"
   local file="$HOME/main/scratch/${date}${1:+-${1}}.md"
@@ -263,7 +264,6 @@ alias conflicts='git diff --name-only --diff-filter=U'
 
 ## Python
 alias python2=python2
-alias python=python3
 
 ## Config files (macos)
 alias ghostty-config='subl "$HOME/Library/Application Support/com.mitchellh.ghostty/config"'
@@ -416,3 +416,7 @@ eval "$(mise activate zsh)"
 
 # zoxide should be initialized last to avoid hook ordering issues.
 command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
+source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+
+# safe-chain: ensure binary is found before asdf/mise shims
+export PATH="/Users/cjones/.safe-chain/bin:$PATH"

@@ -125,7 +125,20 @@ return {
             },
           },
         },
-        ts_ls = {},
+        vtsls = {
+          settings = {
+            typescript = {
+              tsserver = {
+                maxTsServerMemory = 12288,
+              },
+            },
+            javascript = {
+              tsserver = {
+                maxTsServerMemory = 12288,
+              },
+            },
+          },
+        },
         ruff = {},
         tailwindcss = {},
         lua_ls = {
@@ -141,6 +154,26 @@ return {
 
       require('lspconfig').mdx_analyzer.setup { capabilities = capabilities }
 
+      -- vtsls is configured directly via vim.lsp.config (not the mason handler below)
+      -- because the legacy lspconfig.setup() shim drops `settings` for vtsls, leaving
+      -- tsserver on its 3GB default heap — which crash-loops on the larger codebases
+      vim.lsp.config('vtsls', {
+        capabilities = capabilities,
+        settings = {
+          typescript = {
+            tsserver = {
+              maxTsServerMemory = 12288,
+            },
+          },
+          javascript = {
+            tsserver = {
+              maxTsServerMemory = 12288,
+            },
+          },
+        },
+      })
+      vim.lsp.enable 'vtsls'
+
       require('mason').setup()
 
       local ensure_installed = vim.tbl_keys(servers or {})
@@ -150,6 +183,11 @@ return {
       require('mason-lspconfig').setup {
         handlers = {
           function(server_name)
+            -- vtsls is set up directly via vim.lsp.config above; skip the
+            -- default handler so it doesn't double-setup with empty settings.
+            if server_name == 'vtsls' then
+              return
+            end
             local server = servers[server_name] or {}
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
