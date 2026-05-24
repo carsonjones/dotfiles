@@ -5,7 +5,7 @@ selection-background = 3D5A80
 
 window-colorspace = "display-p3"
 
-font-size = 18
+font-size = 16
 adjust-cell-height = 15%
 
 background-opacity = .96

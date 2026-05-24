@@ -1,76 +1,99 @@
+__zellij_current_tab_pane_count() {
+  [[ -n "${ZELLIJ:-}" ]] || return 1
+
+  local panes_json pane_count
+  panes_json="$(zellij action list-panes --json --state --tab 2>/dev/null)" || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+
+  pane_count="$(
+    printf '%s' "$panes_json" | jq -r '
+      def panes:
+        if type == "array" then .
+        elif type == "object" and has("panes") then .panes
+        else []
+        end;
+
+      panes | map(select(((.is_exited // false) | not))) | length
+    ' 2>/dev/null
+  )" || return 1
+
+  [[ "$pane_count" == <-> ]] || return 1
+  printf '%s\n' "$pane_count"
+}
+
+__zellij_tab_count() {
+  [[ -n "${ZELLIJ:-}" ]] || return 1
+
+  local tabs_json tab_count
+  tabs_json="$(zellij action list-tabs --json --state --panes 2>/dev/null)" || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+
+  tab_count="$(
+    printf '%s' "$tabs_json" | jq -r '
+      if type == "array" then length
+      elif type == "object" and has("tabs") then .tabs | length
+      else 0
+      end
+    ' 2>/dev/null
+  )" || return 1
+
+  [[ "$tab_count" == <-> ]] || return 1
+  printf '%s\n' "$tab_count"
+}
+
+__zellij_safe_exit() {
+  [[ -n "${ZELLIJ:-}" ]] || return 1
+
+  local mode="${1:-detach}"
+  local pane_count tab_count
+  pane_count="$(__zellij_current_tab_pane_count)" || return 1
+  tab_count="$(__zellij_tab_count)" || return 1
+
+  if (( pane_count > 1 )); then
+    zellij action close-pane >/dev/null 2>&1
+  elif (( tab_count > 1 )); then
+    zellij action close-tab >/dev/null 2>&1
+  elif [[ "$mode" == "kill" ]]; then
+    if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
+      zellij kill-session "$ZELLIJ_SESSION_NAME" >/dev/null 2>&1
+    else
+      zellij action close-pane >/dev/null 2>&1
+    fi
+  else
+    zellij action detach >/dev/null 2>&1
+  fi
+}
+
 __zellij_is_last_pane() {
   [[ -n "${ZELLIJ:-}" ]] || return 1
 
-  local panes_json tabs_json pane_count tab_count
-  panes_json="$(zellij action list-panes --json --state --tab 2>/dev/null)" || return 1
-  tabs_json="$(zellij action list-tabs --json --state --panes 2>/dev/null)" || return 1
+  local pane_count tab_count
+  pane_count="$(__zellij_current_tab_pane_count)" || return 1
+  tab_count="$(__zellij_tab_count)" || return 1
 
-  if command -v jq >/dev/null 2>&1; then
-    pane_count="$(
-      printf '%s' "$panes_json" | jq -r '
-        def panes:
-          if type == "array" then
-            .
-          elif type == "object" and has("panes") then
-            .panes
-          else
-            []
-          end;
-
-        panes as $panes
-        | ($panes | map(select((.is_focused // false) and ((.is_exited // false) | not))) | first) as $focused
-        | if $focused == null then
-            0
-          else
-            $panes
-            | map(
-                select(((.is_exited // false) | not))
-                | select(
-                    if ($focused.tab_position? // null) != null and (.tab_position? // null) != null then
-                      .tab_position == $focused.tab_position
-                    elif ($focused.tab_id? // null) != null and (.tab_id? // null) != null then
-                      .tab_id == $focused.tab_id
-                    elif ($focused.tab_name? // null) != null and (.tab_name? // null) != null then
-                      .tab_name == $focused.tab_name
-                    else
-                      .pane_id == $focused.pane_id
-                    end
-                  )
-              )
-            | length
-          end
-      ' 2>/dev/null
-    )"
-
-    tab_count="$(
-      printf '%s' "$tabs_json" | jq -r '
-        def tabs:
-          if type == "array" then
-            .
-          elif type == "object" and has("tabs") then
-            .tabs
-          else
-            []
-          end;
-
-        tabs
-        | map(
-            select(
-              ((.active_panes // .panes // .pane_count // 0) | tonumber? // 0) > 0
-            )
-          )
-        | length
-      ' 2>/dev/null
-    )"
-  else
-    pane_count="0"
-    tab_count="0"
-  fi
-
-  [[ "$pane_count" == "1" && "$tab_count" == "1" ]]
+  (( pane_count == 1 && tab_count == 1 ))
 }
 
-__zj_most_recent_session_name() {
+__zj_session_line() {
+  local session_name="$1"
+
+  zellij list-sessions --no-formatting 2>/dev/null \
+    | while IFS= read -r line; do
+        [[ "${line%% *}" == "$session_name" ]] && printf '%s\n' "$line" && return 0
+      done
+}
+
+__zj_delete_exited_session() {
+  local session_name="$1"
+  local session_line
+
+  session_line="$(__zj_session_line "$session_name")"
+  [[ "$session_line" == *"(EXITED"* ]] || return 0
+
+  zellij delete-session "$session_name" --force >/dev/null 2>&1
+}
+
+__zj_most_recent_live_session_name() {
   local session_line
 
   session_line="$(
@@ -78,13 +101,6 @@ __zj_most_recent_session_name() {
       | rg -v '\(EXITED' \
       | head -n 1
   )"
-
-  if [[ -z "$session_line" ]]; then
-    session_line="$(
-      zellij list-sessions --no-formatting --reverse 2>/dev/null \
-        | head -n 1
-    )"
-  fi
 
   [[ -n "$session_line" ]] || return 1
   printf '%s\n' "${session_line%% *}"
@@ -94,7 +110,7 @@ zj() {
   local session_name
 
   if [[ "$#" -eq 0 ]]; then
-    session_name="$(__zj_most_recent_session_name)"
+    session_name="$(__zj_most_recent_live_session_name)"
 
     if [[ -n "$session_name" ]]; then
       if [[ -n "${ZELLIJ:-}" ]]; then
@@ -111,16 +127,14 @@ zj() {
   case "$1" in
     -n|-a|new)
       shift
-      session_name="${1:-}"
+      session_name="${1:-$(basename "$PWD")}"
 
-      if [[ -n "$session_name" ]]; then
-        if [[ -n "${ZELLIJ:-}" ]]; then
-          zellij action switch-session --cwd "$PWD" "$session_name"
-        else
-          zellij attach --create "$session_name"
-        fi
+      __zj_delete_exited_session "$session_name"
+
+      if [[ -n "${ZELLIJ:-}" ]]; then
+        zellij action switch-session --cwd "$PWD" "$session_name"
       else
-        zellij
+        zellij attach --create "$session_name"
       fi
       return
       ;;
@@ -132,6 +146,8 @@ zj() {
 zjn() {
   local session_name="${1:-$(basename "$PWD")}"
 
+  __zj_delete_exited_session "$session_name"
+
   if [[ -n "${ZELLIJ:-}" ]]; then
     zellij action switch-session --cwd "$PWD" "$session_name"
   else
@@ -139,14 +155,35 @@ zjn() {
   fi
 }
 
+__zj_is_default_tab_name() {
+  [[ "$1" == Tab\ \#<-> ]]
+}
+
+__zj_is_auto_tab_name_for_pwd() {
+  local base="$1"
+  local tab_name="$2"
+
+  [[ "$tab_name" == "$base" || "$tab_name" == "$base "<-> ]]
+}
+
 __zj_set_tab_name() {
   [[ -n "${ZELLIJ:-}" ]] || return
-  local base candidate n tabs_json other_names
+  local base candidate n tabs_json active_name other_names
   base="$(basename "$PWD")"
 
   tabs_json="$(zellij action list-tabs --json 2>/dev/null)"
 
   if [[ -n "$tabs_json" ]] && command -v jq >/dev/null 2>&1; then
+    active_name="$(printf '%s' "$tabs_json" | jq -r '.[] | select(.active // false) | .name // empty' 2>/dev/null | head -n 1)"
+
+    if [[ -n "$active_name" ]]; then
+      if [[ -n "${__ZJ_AUTO_TAB_NAME:-}" ]]; then
+        [[ "$active_name" == "$__ZJ_AUTO_TAB_NAME" ]] || return
+      elif ! __zj_is_default_tab_name "$active_name" && ! __zj_is_auto_tab_name_for_pwd "$base" "$active_name"; then
+        return
+      fi
+    fi
+
     other_names="$(printf '%s' "$tabs_json" | jq -r '.[] | select(.active // false | not) | .name // empty' 2>/dev/null)"
     candidate="$base"
     n=2
@@ -159,7 +196,9 @@ __zj_set_tab_name() {
   fi
 
   zellij action rename-tab "$candidate" 2>/dev/null
+  typeset -g __ZJ_AUTO_TAB_NAME="$candidate"
 }
+autoload -Uz add-zsh-hook
 add-zsh-hook chpwd __zj_set_tab_name
 __zj_set_tab_name
 

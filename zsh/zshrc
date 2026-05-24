@@ -25,6 +25,26 @@ $HOME/.bun/bin:\
 $PATH"
 #$HOME.local/share/mise/shims:
 
+# Keep zsh-histdb's internal sqlite calls off wrapper/shim paths that can
+# prompt during restored zellij startup.
+sqlite3() {
+  local sqlite_bin
+
+  for sqlite_bin in \
+    /opt/homebrew/opt/sqlite/bin/sqlite3 \
+    /usr/local/opt/sqlite/bin/sqlite3 \
+    /usr/bin/sqlite3
+  do
+    if [[ -x "$sqlite_bin" ]]; then
+      command "$sqlite_bin" "$@"
+      return $?
+    fi
+  done
+
+  sqlite_bin="$(whence -p sqlite3 2>/dev/null)" || return 127
+  command "$sqlite_bin" "$@"
+}
+
 # Homebrew paths (added by brew shellenv above, but extras here)
 if command -v brew &>/dev/null; then
     export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
@@ -182,32 +202,23 @@ fi
 
 ## General
 __smart_exit() {
+  local mode="detach"
+
+  if [[ "${1:-}" == "--kill-session" ]]; then
+    mode="kill"
+    shift
+  fi
+
   if [[ -n "${ZELLIJ:-}" ]] && command -v zellij >/dev/null 2>&1; then
-    local panes_json pane_count
-    panes_json="$(zellij action list-panes --json --state --tab 2>/dev/null)"
+    __zellij_safe_exit "$mode"
+    return $?
+  fi
+  builtin exit "$@"
+}
 
-    if command -v jq >/dev/null 2>&1 && [[ -n "$panes_json" ]]; then
-      pane_count="$(printf '%s' "$panes_json" | jq -r '
-        def panes: if type == "array" then . elif type == "object" and has("panes") then .panes else [] end;
-        panes as $panes
-        | ($panes | map(select((.is_focused // false) and ((.is_exited // false) | not))) | first) as $focused
-        | if $focused == null then 0
-          else $panes | map(select((.is_exited // false | not) and (
-            if ($focused.tab_position? // null) != null and (.tab_position? // null) != null then .tab_position == $focused.tab_position
-            elif ($focused.tab_id? // null) != null and (.tab_id? // null) != null then .tab_id == $focused.tab_id
-            elif ($focused.tab_name? // null) != null and (.tab_name? // null) != null then .tab_name == $focused.tab_name
-            else .pane_id == $focused.pane_id end))) | length
-          end
-      ' 2>/dev/null)"
-    fi
-
-    if [[ "${pane_count:-0}" -gt 1 ]]; then
-      zellij action close-pane >/dev/null 2>&1
-    elif __zellij_is_last_pane; then
-      zellij action detach >/dev/null 2>&1
-    else
-      zellij action close-tab >/dev/null 2>&1
-    fi
+__detach_or_exit() {
+  if [[ -n "${ZELLIJ:-}" ]] && command -v zellij >/dev/null 2>&1; then
+    zellij action detach >/dev/null 2>&1
     return $?
   fi
   builtin exit "$@"
@@ -225,9 +236,14 @@ cc-color() {
   local color=${colors[$((RANDOM % ${#colors[@]}))]}
   printf '/color %s\n' "$color" | claude "$@"
 }
+alias edit-config="nvim ~/.config"
 alias oc="opencode"
 alias :q="__smart_exit"
 alias :Q="__smart_exit"
+alias :qk="__smart_exit --kill-session"
+alias :QK="__smart_exit --kill-session"
+alias :qd="__detach_or_exit"
+alias :QD="__detach_or_exit"
 alias review='git diff | comview'
 alias review-staged='git diff --staged | comview'
 alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
@@ -279,6 +295,13 @@ alias tk='tmux kill-session -t'
 alias nv='nvim'
 alias nvd='nvim $(git diff --name-only HEAD)'
 alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
+_sfw() { command sfw "$@" 2> >(grep -v "Warning: Socket Firewall did not detect any package fetch" >&2); }
+alias npm="_sfw npm"
+alias npx="_sfw npx"
+alias pnpm="_sfw pnpm"
+alias pnpx="_sfw pnpx"
+alias yarn="_sfw yarn"
+alias bun="_sfw bun"
 
 ########################################
 # FUNCTIONS
@@ -416,7 +439,3 @@ eval "$(mise activate zsh)"
 
 # zoxide should be initialized last to avoid hook ordering issues.
 command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
-source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
-
-# safe-chain: ensure binary is found before asdf/mise shims
-export PATH="/Users/cjones/.safe-chain/bin:$PATH"

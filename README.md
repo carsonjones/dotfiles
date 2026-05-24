@@ -7,3 +7,4 @@ claude/       # claude code settings
 cursor/       # cursor mcp template
 scripts/      # install script
 ```
+

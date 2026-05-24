@@ -11,3 +11,8 @@ require 'config.options'
 require 'config.keymaps'
 require 'config.autocmds'
 require 'config.lazy'
+
+require('trailboss').setup {
+  source_path = '~/.local/share/trailboss/comments.jsonl',
+  -- source_path = '/tmp/trailboss-dev.jsonl',
+}

@@ -1,5 +1,5 @@
 personality = "pragmatic"
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "medium"
 
 [projects."/Users/jones/src/nhl-tui"]
@@ -30,6 +30,9 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/jones/src/sandbox/comview"]
+trust_level = "trusted"
+
+[projects."/Users/jones/src/projects/trailboss"]
 trust_level = "trusted"
 
 [notice.model_migrations]
