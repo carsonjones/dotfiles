@@ -1,7 +1,7 @@
 layout {
     default_tab_template {
         pane size=1 borderless=true {
-            plugin location="file:/Users/jones/src/dotfiles/zellij/plugins/zjstatus.wasm" {
+            plugin location="file:~/src/dotfiles/zellij/plugins/zjstatus.wasm" {
                 format_left   "#[bg=#252A34,fg=#7C7F85,bold]⌁⌁#[bg=#252A34,fg=#7C7F85]{tabs}"
                 format_center ""
                 format_right  "{mode}"

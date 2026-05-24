@@ -14,7 +14,7 @@ keybinds {
     }
 }
 load_plugins {
-    "file:/Users/jones/src/dotfiles/zellij/plugins/zellij-attention.wasm" {
+    "file:~/src/dotfiles/zellij/plugins/zellij-attention.wasm" {
         enabled "true"
         waiting_icon "󰔟"
         completed_icon "󰄬"
@@ -217,8 +217,8 @@ default_layout "zjstatus"
  
 // The folder in which Zellij will look for layouts
 // (Requires restart)
-// 
-layout_dir "/Users/jones/src/dotfiles/zellij/layouts"
+//
+// layout_dir "~/src/dotfiles/zellij/layouts"
  
 // The folder in which Zellij will look for themes
 // (Requires restart)
