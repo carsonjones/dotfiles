@@ -295,13 +295,13 @@ alias tk='tmux kill-session -t'
 alias nv='nvim'
 alias nvd='nvim $(git diff --name-only HEAD)'
 alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
-_sfw() { command sfw "$@" 2> >(grep -v "Warning: Socket Firewall did not detect any package fetch" >&2); }
-alias npm="_sfw npm"
-alias npx="_sfw npx"
-alias pnpm="_sfw pnpm"
-alias pnpx="_sfw pnpx"
-alias yarn="_sfw yarn"
-alias bun="_sfw bun"
+# _sfw() { command sfw "$@" 2> >(grep -v "Warning: Socket Firewall did not detect any package fetch" >&2); }
+# alias npm="_sfw npm"
+# alias npx="_sfw npx"
+# alias pnpm="_sfw pnpm"
+# alias pnpx="_sfw pnpx"
+# alias yarn="_sfw yarn"
+# alias bun="_sfw bun"
 
 ########################################
 # FUNCTIONS
@@ -425,6 +425,20 @@ elif [ -n "$BASH_VERSION" ]; then
   PROMPT_COMMAND='set_name'
 fi
 
+symlinks() {
+    local root="${1:-/}"
+
+    find "$root" -type l 2>/dev/null | while IFS= read -r link; do
+        local target status
+        target=$(readlink "$link")
+        if [[ ! -e "$link" ]]; then
+            status="BROKEN"
+        else
+            status="OK"
+        fi
+        printf "%s\t%s\t%s\n" "$status" "$link" "$target"
+    done | column -t -s $'\t'
+}
 
 ########################################
 # LOCAL OVERRIDES

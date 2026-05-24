@@ -43,5 +43,6 @@
   "skipDangerousModePermissionPrompt": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754086247817
-  }
+  },
+  "model": "opus"
 }
