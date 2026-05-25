@@ -45,7 +45,7 @@ fi
 
 # Core tools (always installed)
 echo "Installing core tools..."
-brew install git neovim fzf zoxide ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
+brew install git neovim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
 
 # Set zsh as default shell
 if [[ "$SHELL" != *"zsh"* ]]; then
@@ -193,6 +193,7 @@ fi
 echo "Linking zellij config..."
 mkdir -p ~/.config/zellij
 ln -sf "$DOTFILES/zellij/config.kdl" ~/.config/zellij/config.kdl
+ln -sfn "$DOTFILES/zellij/layouts" ~/.config/zellij/layouts
 
 # Link comview config
 echo "Linking comview config..."

@@ -221,6 +221,8 @@ default_layout "zjstatus"
 // The folder in which Zellij will look for layouts
 // (Requires restart)
 //
+// layout_dir does not expand ~/$HOME; layouts are symlinked to the default
+// ~/.config/zellij/layouts by scripts/install.sh instead.
 // layout_dir "~/src/dotfiles/zellij/layouts"
  
 // The folder in which Zellij will look for themes

@@ -54,6 +54,13 @@ __zellij_safe_exit() {
   elif (( tab_count > 1 )); then
     zellij action close-tab >/dev/null 2>&1
   elif [[ "$mode" == "kill" ]]; then
+    # Last pane + last tab: killing ends the whole session, so confirm first.
+    local REPLY target="${ZELLIJ_SESSION_NAME:-this session}"
+    if ! read -q "REPLY?kill ${target}? [y/N] "; then
+      print
+      return 0
+    fi
+    print
     if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
       zellij kill-session "$ZELLIJ_SESSION_NAME" >/dev/null 2>&1
     else

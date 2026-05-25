@@ -15,7 +15,6 @@ fi
 export PATH="\
 $HOME/bin:\
 $HOME/.local/bin:\
-$HOME/bin:\
 $HOME/.bun/bin:\
 /usr/local/bin:\
 /usr/bin:\
@@ -24,6 +23,10 @@ $HOME/.bun/bin:\
 /sbin:\
 $PATH"
 #$HOME.local/share/mise/shims:
+
+# Keep PATH entries unique; otherwise `which -a` shows the same binary twice
+# when inherited shell/zellij PATH already contains one of the entries above.
+typeset -U path PATH
 
 # Keep zsh-histdb's internal sqlite calls off wrapper/shim paths that can
 # prompt during restored zellij startup.
@@ -189,6 +192,7 @@ command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 
 # local bin
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+typeset -U path PATH
 
 typeset -g DOTFILES_ROOT="${DOTFILES:-${${(%):-%x}:A:h:h}}"
 
@@ -286,7 +290,6 @@ alias ghostty-config='subl "$HOME/Library/Application Support/com.mitchellh.ghos
 alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_desktop_config.json"'
 
 ## Tools
-alias z="zoxide"
 alias lg="lazygit"
 alias tl='tmux ls'
 alias ta='tmux attach -t'
@@ -451,6 +454,3 @@ export LANG=en_US.UTF-8
 # Source local config for sensitive values and machine-specific settings
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 eval "$(mise activate zsh)"
-
-# zoxide should be initialized last to avoid hook ordering issues.
-command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
