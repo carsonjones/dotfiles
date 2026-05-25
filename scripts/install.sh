@@ -217,6 +217,13 @@ ln -sf "$DOTFILES/claude/settings.json" ~/.claude/settings.json
 ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$DOTFILES/claude/mcp_settings.json" ~/.claude/mcp_settings.json
 
+# Link pi extensions
+echo "Linking pi extensions..."
+mkdir -p ~/.pi/agent/extensions
+for ext in "$DOTFILES"/pi/extensions/*.ts; do
+    [ -e "$ext" ] && ln -sf "$ext" "$HOME/.pi/agent/extensions/$(basename "$ext")"
+done
+
 # Link codex config
 echo "Linking codex config..."
 ln -sfn "$DOTFILES/.codex" ~/.codex
