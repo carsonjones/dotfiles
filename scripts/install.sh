@@ -217,12 +217,32 @@ ln -sf "$DOTFILES/claude/settings.json" ~/.claude/settings.json
 ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$DOTFILES/claude/mcp_settings.json" ~/.claude/mcp_settings.json
 
-# Link pi extensions
-echo "Linking pi extensions..."
-mkdir -p ~/.pi/agent/extensions
-for ext in "$DOTFILES"/pi/extensions/*.ts; do
-    [ -e "$ext" ] && ln -sf "$ext" "$HOME/.pi/agent/extensions/$(basename "$ext")"
+# Link pi config/resources (do not link auth.json, sessions, or bin)
+echo "Linking pi config..."
+mkdir -p ~/.pi/agent
+if [ -f "$DOTFILES/pi/settings.json" ]; then
+    ln -sf "$DOTFILES/pi/settings.json" ~/.pi/agent/settings.json
+fi
+
+for kind in extensions prompts skills themes; do
+    if [ -d "$DOTFILES/pi/$kind" ]; then
+        mkdir -p "$HOME/.pi/agent/$kind"
+        for item in "$DOTFILES"/pi/"$kind"/*; do
+            [ -e "$item" ] && ln -sfn "$item" "$HOME/.pi/agent/$kind/$(basename "$item")"
+        done
+    fi
 done
+
+# Vibes are generated data; link the whole dir when safe so `/vibe generate` is tracked.
+if [ -d "$DOTFILES/pi/vibes" ]; then
+    if [ ! -e "$HOME/.pi/agent/vibes" ] || [ -L "$HOME/.pi/agent/vibes" ]; then
+        ln -sfn "$DOTFILES/pi/vibes" "$HOME/.pi/agent/vibes"
+    else
+        for item in "$DOTFILES"/pi/vibes/*; do
+            [ -e "$item" ] && ln -sfn "$item" "$HOME/.pi/agent/vibes/$(basename "$item")"
+        done
+    fi
+fi
 
 # Link codex config
 echo "Linking codex config..."

@@ -1,0 +1,10 @@
+{
+  "lastChangelogVersion": "0.75.5",
+  "packages": [
+    "npm:pi-rewind-hook",
+    "npm:pi-web-access",
+    "npm:pi-lsp-extension"
+  ],
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5"
+}
