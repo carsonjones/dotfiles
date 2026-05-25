@@ -4,6 +4,9 @@
 
 keybinds {
     shared_except "locked" {
+        // Free Ctrl+h so nvim's <C-h> window-nav works through zellij.
+        // Reach Move mode via Ctrl+g (lock) workflow or remap if needed.
+        unbind "Ctrl h"
         bind "Alt h" { MoveFocusOrTab "left"; }
         bind "Alt j" { MoveFocus "down"; }
         bind "Alt k" { MoveFocus "up"; }
