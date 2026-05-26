@@ -1,1 +1,1 @@
-/Users/jones/src/trailboss/nvim/lua/trailboss.lua
+/Users/cjones/src/trailboss/nvim/lua/trailboss.lua

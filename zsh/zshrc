@@ -296,6 +296,7 @@ alias nv='nvim'
 alias nvd='nvim $(git diff --name-only HEAD)'
 alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
 alias te="economist"
+alias tb="trailboss"
 # _sfw() { command sfw "$@" 2> >(grep -v "Warning: Socket Firewall did not detect any package fetch" >&2); }
 # alias npm="_sfw npm"
 # alias npx="_sfw npx"
