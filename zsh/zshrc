@@ -170,9 +170,6 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 # TOOL INITIALIZATIONS
 ########################################
 
-# asdf
-[ -f "$HOME/.asdf/asdf.sh" ] && source "$HOME/.asdf/asdf.sh"
-
 # rbenv
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
