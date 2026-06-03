@@ -279,6 +279,19 @@ alias gitclean='git branch --merged | grep -v "\*" | grep -v "master" | grep -v 
 alias gitbranch="git for-each-ref --format='%(committerdate) %09 %(authorname) %09 %(refname)' | sort -k5n -k2M -k3n -k4n"
 alias conflicts='git diff --name-only --diff-filter=U'
 
+# Fetch origin/<branch> and check it out (creates a local tracking branch if needed,
+# fast-forwards an existing local branch when possible).
+gfco() {
+  local branch="$1"
+  if [[ -z "$branch" ]]; then
+    echo "usage: gfco <branch>" >&2
+    return 1
+  fi
+  git fetch origin "$branch" || return
+  git checkout "$branch" || return
+  git merge --ff-only "origin/$branch"
+}
+
 ## Python
 alias python2=python2
 

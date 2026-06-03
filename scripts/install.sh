@@ -195,6 +195,11 @@ mkdir -p ~/.config/zellij
 ln -sf "$DOTFILES/zellij/config.kdl" ~/.config/zellij/config.kdl
 ln -sfn "$DOTFILES/zellij/layouts" ~/.config/zellij/layouts
 
+# Link herdr config (terminal workspace manager for AI agents)
+echo "Linking herdr config..."
+mkdir -p ~/.config/herdr
+ln -sf "$DOTFILES/herdr/config.toml" ~/.config/herdr/config.toml
+
 # Link comview config
 echo "Linking comview config..."
 mkdir -p ~/.config/comview
