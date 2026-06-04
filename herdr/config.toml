@@ -1,5 +1,15 @@
 onboarding = false
 
+[keys]
+previous_agent = "shift+alt+["
+next_agent = "shift+alt+]"
+previous_tab = "alt+["
+next_tab = "alt+]"
+
+# alt+1..9 focuses tab N within the active workspace (herdr appends 1..9).
+[keys.indexed]
+tabs = "alt"
+
 [theme]
 name = "one-dark"
 

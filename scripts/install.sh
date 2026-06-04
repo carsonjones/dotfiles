@@ -2,6 +2,7 @@
 set -e
 
 DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+[ -n "$DOTFILES" ] || { echo "error: DOTFILES unset, refusing to link" >&2; exit 1; }
 MINIMAL=false
 
 # Parse arguments
@@ -198,7 +199,7 @@ ln -sfn "$DOTFILES/zellij/layouts" ~/.config/zellij/layouts
 # Link herdr config (terminal workspace manager for AI agents)
 echo "Linking herdr config..."
 mkdir -p ~/.config/herdr
-ln -sf "$DOTFILES/herdr/config.toml" ~/.config/herdr/config.toml
+ln -sfn "$DOTFILES/herdr/config.toml" ~/.config/herdr/config.toml
 
 # Link comview config
 echo "Linking comview config..."
