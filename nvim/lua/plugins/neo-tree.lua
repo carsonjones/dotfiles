@@ -8,9 +8,8 @@ return {
   },
   lazy = true,
   cmd = { 'Neotree' },
-  keys = {
-    { '<leader>te', ':Neotree toggle left<CR>', desc = '[T]oggle [E]xplorer', silent = true },
-  },
+  -- <leader>te temporarily handed off to yazi.nvim; use :Neotree to open this.
+  keys = {},
   opts = {
     default_component_configs = {
       git_status = {

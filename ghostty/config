@@ -27,3 +27,7 @@ window-padding-y = 7,4
 keybind = alt+left=esc:B
 keybind = alt+right=esc:F
 keybind = cmd+backspace=esc:W
+
+# Mac keyboards have no End key, so ctrl+End never reaches herdr's
+# "jump to bottom". Send the literal ctrl+End CSI sequence on cmd+down.
+keybind = cmd+down=text:\x1b[1;5F
