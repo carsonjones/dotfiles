@@ -211,6 +211,13 @@ echo "Linking tmux config..."
 mkdir -p ~/.config/tmux
 ln -sf "$DOTFILES/tmux/tmux.conf" ~/.config/tmux/tmux.conf
 
+# Link yazi config
+echo "Linking yazi config..."
+mkdir -p ~/.config/yazi
+ln -sf "$DOTFILES/yazi/yazi.toml" ~/.config/yazi/yazi.toml
+ln -sf "$DOTFILES/yazi/theme.toml" ~/.config/yazi/theme.toml
+ln -sf "$DOTFILES/yazi/keymap.toml" ~/.config/yazi/keymap.toml
+
 # Install TPM if not present
 if [ ! -d ~/.config/tmux/plugins/tpm ]; then
     echo "Installing TPM..."

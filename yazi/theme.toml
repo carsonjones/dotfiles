@@ -1,0 +1,107 @@
+# Yazi theme — onedark (matches navarasu/onedark.nvim "dark" style)
+# Docs: https://yazi-rs.github.io/docs/configuration/theme
+
+[manager]
+cwd = { fg = "#61afef" }
+
+# Hovered
+hovered         = { fg = "#282c34", bg = "#61afef" }
+preview_hovered = { underline = true }
+
+# Find
+find_keyword  = { fg = "#e5c07b", italic = true }
+find_position = { fg = "#c678dd", bg = "reset", italic = true }
+
+# Marker
+marker_copied   = { fg = "#98c379", bg = "#98c379" }
+marker_cut      = { fg = "#e86671", bg = "#e86671" }
+marker_marked   = { fg = "#56b6c2", bg = "#56b6c2" }
+marker_selected = { fg = "#e5c07b", bg = "#e5c07b" }
+
+# Tab
+tab_active   = { fg = "#282c34", bg = "#61afef" }
+tab_inactive = { fg = "#abb2bf", bg = "#3e4452" }
+tab_width    = 1
+
+# Border
+border_symbol = "│"
+border_style  = { fg = "#5c6370" }
+
+# Highlighting
+syntect_theme = ""
+
+[status]
+separator_open  = ""
+separator_close = ""
+separator_style = { fg = "#3e4452", bg = "#3e4452" }
+
+# Mode
+mode_normal = { fg = "#282c34", bg = "#61afef", bold = true }
+mode_select = { fg = "#282c34", bg = "#98c379", bold = true }
+mode_unset  = { fg = "#282c34", bg = "#d19a66", bold = true }
+
+# Progress
+progress_label  = { fg = "#ffffff", bold = true }
+progress_normal = { fg = "#61afef", bg = "#3e4452" }
+progress_error  = { fg = "#e86671", bg = "#3e4452" }
+
+# Permissions
+permissions_t = { fg = "#61afef" }
+permissions_r = { fg = "#e5c07b" }
+permissions_w = { fg = "#e86671" }
+permissions_x = { fg = "#98c379" }
+permissions_s = { fg = "#5c6370" }
+
+[input]
+border   = { fg = "#61afef" }
+title    = {}
+value    = {}
+selected = { reversed = true }
+
+[select]
+border   = { fg = "#61afef" }
+active   = { fg = "#c678dd" }
+inactive = {}
+
+[tasks]
+border  = { fg = "#61afef" }
+title   = {}
+hovered = { underline = true }
+
+[which]
+mask            = { bg = "#282c34" }
+cand            = { fg = "#56b6c2" }
+rest            = { fg = "#abb2bf" }
+desc            = { fg = "#c678dd" }
+separator       = "  "
+separator_style = { fg = "#5c6370" }
+
+[help]
+on      = { fg = "#56b6c2" }
+exec    = { fg = "#c678dd" }
+desc    = { fg = "#abb2bf" }
+hovered = { bg = "#3e4452", bold = true }
+footer  = { fg = "#3e4452", bg = "#abb2bf" }
+
+[filetype]
+rules = [
+	# Images
+	{ mime = "image/*", fg = "#e5c07b" },
+
+	# Videos
+	{ mime = "video/*", fg = "#d19a66" },
+	{ mime = "audio/*", fg = "#d19a66" },
+
+	# Archives
+	{ mime = "application/zip",             fg = "#c678dd" },
+	{ mime = "application/gzip",            fg = "#c678dd" },
+	{ mime = "application/x-tar",           fg = "#c678dd" },
+	{ mime = "application/x-bzip",          fg = "#c678dd" },
+	{ mime = "application/x-bzip2",         fg = "#c678dd" },
+	{ mime = "application/x-7z-compressed", fg = "#c678dd" },
+	{ mime = "application/x-rar",           fg = "#c678dd" },
+
+	# Fallback
+	{ name = "*",  fg = "#abb2bf" },
+	{ name = "*/", fg = "#61afef" },
+]

@@ -1,0 +1,8 @@
+# Yazi keymap overrides
+# Docs: https://yazi-rs.github.io/docs/configuration/keymap
+
+[manager]
+prepend_keymap = [
+	# Vim-style :q to quit
+	{ on = [":", "q"], run = "quit", desc = "Quit yazi" },
+]
