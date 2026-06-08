@@ -310,6 +310,9 @@ alias nvd='nvim $(git diff --name-only HEAD)'
 alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'
 alias te="economist"
 alias tb="trailboss"
+alias hd="herdr"
+alias yy="yazi"
+alias yz="yazi"
 # _sfw() { command sfw "$@" 2> >(grep -v "Warning: Socket Firewall did not detect any package fetch" >&2); }
 # alias npm="_sfw npm"
 # alias npx="_sfw npx"
@@ -465,3 +468,7 @@ export LANG=en_US.UTF-8
 # Source local config for sensitive values and machine-specific settings
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 eval "$(mise activate zsh)"
+source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+
+# safe-chain: ensure binary is found before asdf/mise shims
+export PATH="/Users/cjones/.safe-chain/bin:$PATH"
