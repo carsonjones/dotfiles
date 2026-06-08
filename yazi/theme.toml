@@ -1,7 +1,7 @@
 # Yazi theme — onedark (matches navarasu/onedark.nvim "dark" style)
 # Docs: https://yazi-rs.github.io/docs/configuration/theme
 
-[manager]
+[mgr]
 cwd = { fg = "#61afef" }
 
 # Hovered
@@ -21,7 +21,6 @@ marker_selected = { fg = "#e5c07b", bg = "#e5c07b" }
 # Tab
 tab_active   = { fg = "#282c34", bg = "#61afef" }
 tab_inactive = { fg = "#abb2bf", bg = "#3e4452" }
-tab_width    = 1
 
 # Border
 border_symbol = "│"
@@ -58,7 +57,15 @@ title    = {}
 value    = {}
 selected = { reversed = true }
 
-[select]
+[confirm]
+border  = { fg = "#61afef" }
+title   = { fg = "#61afef" }
+content = {}
+list    = {}
+btn_yes = { reversed = true }
+btn_no  = {}
+
+[pick]
 border   = { fg = "#61afef" }
 active   = { fg = "#c678dd" }
 inactive = {}
@@ -102,6 +109,6 @@ rules = [
 	{ mime = "application/x-rar",           fg = "#c678dd" },
 
 	# Fallback
-	{ name = "*",  fg = "#abb2bf" },
-	{ name = "*/", fg = "#61afef" },
+	{ url = "*",  fg = "#abb2bf" },
+	{ url = "*/", fg = "#61afef" },
 ]
