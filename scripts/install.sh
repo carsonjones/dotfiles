@@ -217,6 +217,11 @@ mkdir -p ~/.config/yazi
 ln -sf "$DOTFILES/yazi/yazi.toml" ~/.config/yazi/yazi.toml
 ln -sf "$DOTFILES/yazi/theme.toml" ~/.config/yazi/theme.toml
 ln -sf "$DOTFILES/yazi/keymap.toml" ~/.config/yazi/keymap.toml
+ln -sf "$DOTFILES/yazi/init.lua" ~/.config/yazi/init.lua
+ln -sf "$DOTFILES/yazi/package.toml" ~/.config/yazi/package.toml
+if command -v ya >/dev/null 2>&1; then
+    ya pkg install >/dev/null 2>&1 || true
+fi
 
 # Install TPM if not present
 if [ ! -d ~/.config/tmux/plugins/tpm ]; then

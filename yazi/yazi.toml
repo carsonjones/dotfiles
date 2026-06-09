@@ -12,3 +12,14 @@ sort_dir_first = true
 linemode       = "none"
 show_hidden    = false
 show_symlink   = true
+
+# git.yazi — fetch git status for files and dirs in the current view
+[[plugin.prepend_fetchers]]
+url   = "*"
+run   = "git"
+group = "git"
+
+[[plugin.prepend_fetchers]]
+url   = "*/"
+run   = "git"
+group = "git"
