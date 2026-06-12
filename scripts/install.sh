@@ -236,6 +236,14 @@ ln -sf "$DOTFILES/claude/settings.json" ~/.claude/settings.json
 ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sf "$DOTFILES/claude/mcp_settings.json" ~/.claude/mcp_settings.json
 
+# Link claude skills per-item (leaves other skills in ~/.claude/skills untouched)
+if [ -d "$DOTFILES/claude/skills" ]; then
+    mkdir -p ~/.claude/skills
+    for item in "$DOTFILES"/claude/skills/*; do
+        [ -e "$item" ] && ln -sfn "$item" "$HOME/.claude/skills/$(basename "$item")"
+    done
+fi
+
 # Link pi config/resources (do not link auth.json, sessions, or bin)
 echo "Linking pi config..."
 mkdir -p ~/.pi/agent
