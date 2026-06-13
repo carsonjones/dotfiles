@@ -467,8 +467,8 @@ export LANG=en_US.UTF-8
 
 # Source local config for sensitive values and machine-specific settings
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
-eval "$(mise activate zsh)"
-source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+command -v mise &>/dev/null && eval "$(mise activate zsh)"
+[ -f ~/.safe-chain/scripts/init-posix.sh ] && source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
 
-# safe-chain: ensure binary is found before asdf/mise shims
-export PATH="/Users/cjones/.safe-chain/bin:$PATH"
+# safe-chain: ensure binary is found before mise shims
+[ -d "$HOME/.safe-chain/bin" ] && export PATH="$HOME/.safe-chain/bin:$PATH"

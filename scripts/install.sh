@@ -4,6 +4,7 @@ set -e
 DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 [ -n "$DOTFILES" ] || { echo "error: DOTFILES unset, refusing to link" >&2; exit 1; }
 MINIMAL=false
+SKIMM=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -12,9 +13,17 @@ while [[ $# -gt 0 ]]; do
             MINIMAL=true
             shift
             ;;
+        --skimm)
+            # provision a curated tool set the Linux-native way
+            # (apt/curl/release binaries — no Homebrew), then link configs.
+            # Implies --minimal (no desktop apps / heavy nvim plugins).
+            SKIMM=true
+            MINIMAL=true
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: install.sh [--minimal]"
+            echo "Usage: install.sh [--minimal] [--skimm]"
             exit 1
             ;;
     esac
@@ -22,6 +31,7 @@ done
 
 echo "Installing dotfiles from $DOTFILES"
 $MINIMAL && echo "(minimal mode - skipping desktop apps and heavy plugins)"
+$SKIMM && echo "(skimm mode: apt/curl tools, no Homebrew)"
 
 # Detect OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -33,41 +43,128 @@ else
     exit 1
 fi
 
-# Install homebrew (macos) or linuxbrew
-if ! command -v brew &> /dev/null; then
-    echo "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if $SKIMM; then
+    ########################################
+    # tool set via apt + official curl installers + GitHub release binaries.
+    ########################################
+    [ "$OS" = "linux" ] || { echo "error: --skimm is Linux-only (got $OS)" >&2; exit 1; }
 
-    # Add brew to PATH for this script
-    if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    LOCAL_BIN="$HOME/.local/bin"
+    mkdir -p "$LOCAL_BIN"
+    export PATH="$LOCAL_BIN:$PATH"
+
+    # apt packages (best-effort; never abort the whole bootstrap on one failure)
+    if command -v apt-get &>/dev/null; then
+        echo "Installing apt packages (ripgrep, fd, bat, fzf, git, unzip)..."
+        sudo apt-get update -y || true
+        sudo apt-get install -y git fzf fd-find bat ripgrep unzip curl ca-certificates tar || true
+        # Ubuntu ships these under alternate names; expose canonical ones
+        [ -x /usr/bin/fdfind ] && ln -sf /usr/bin/fdfind "$LOCAL_BIN/fd"
+        [ -x /usr/bin/batcat ] && ln -sf /usr/bin/batcat "$LOCAL_BIN/bat"
     fi
-fi
 
-# Core tools (always installed)
-echo "Installing core tools..."
-brew install git neovim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
-
-# Set zsh as default shell
-if [[ "$SHELL" != *"zsh"* ]]; then
-    echo "Setting zsh as default shell..."
-    ZSH_PATH=$(which zsh)
-    if ! grep -q "$ZSH_PATH" /etc/shells; then
-        echo "$ZSH_PATH" | sudo tee -a /etc/shells
+    # gh — official apt repo (release asset names are version-pinned, so apt is cleaner)
+    if ! command -v gh &>/dev/null; then
+        echo "Installing gh (GitHub CLI)..."
+        {
+            sudo mkdir -p -m 755 /etc/apt/keyrings
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+                | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+            sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+                | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+            sudo apt-get update -y && sudo apt-get install -y gh
+        } || echo "[dotfiles] WARNING: gh install failed"
     fi
-    sudo chsh -s "$ZSH_PATH" "$USER"
-fi
 
-# Bun
-if ! command -v bun &> /dev/null; then
-    echo "Installing Bun..."
-    curl -fsSL https://bun.sh/install | bash
-fi
+    # neovim — release tarball (apt's nvim is too old for this config)
+    if ! command -v nvim &>/dev/null; then
+        echo "Installing neovim (release tarball)..."
+        {
+            tmp="$(mktemp -d)"
+            curl -fsSL https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz \
+                | tar -xz -C "$tmp"
+            cp -rf "$tmp"/nvim-linux-x86_64/* "$HOME/.local/"
+            rm -rf "$tmp"
+        } || echo "[dotfiles] WARNING: neovim install failed"
+    fi
 
-# uv (fast python package manager)
-if ! command -v uv &> /dev/null; then
-    echo "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # yazi — release zip (provides `ya` + `yazi`)
+    if ! command -v yazi &>/dev/null; then
+        echo "Installing yazi (release zip)..."
+        {
+            tmp="$(mktemp -d)"
+            curl -fsSL https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip -o "$tmp/yazi.zip"
+            unzip -q "$tmp/yazi.zip" -d "$tmp"
+            find "$tmp" -type f \( -name ya -o -name yazi \) -exec cp {} "$LOCAL_BIN/" \;
+            rm -rf "$tmp"
+        } || echo "[dotfiles] WARNING: yazi install failed"
+    fi
+
+    # hunk — release tarball (modem-dev/hunk; asset name is version-agnostic)
+    if ! command -v hunk &>/dev/null; then
+        echo "Installing hunk (release tarball)..."
+        {
+            tmp="$(mktemp -d)"
+            curl -fsSL https://github.com/modem-dev/hunk/releases/latest/download/hunkdiff-linux-x64.tar.gz \
+                | tar -xz -C "$tmp"
+            find "$tmp" -maxdepth 2 -type f -perm -u+x -exec cp {} "$LOCAL_BIN/" \;
+            rm -rf "$tmp"
+        } || echo "[dotfiles] WARNING: hunk install failed"
+    fi
+
+    # herdr — official Linux installer (Rust; installs to ~/.local/bin)
+    if ! command -v herdr &>/dev/null; then
+        echo "Installing herdr..."
+        curl -fsSL https://herdr.dev/install.sh | sh || echo "[dotfiles] WARNING: herdr install failed"
+    fi
+
+    # bun + uv — official curl installers
+    if ! command -v bun &>/dev/null; then
+        echo "Installing bun..."
+        curl -fsSL https://bun.sh/install | bash || echo "[dotfiles] WARNING: bun install failed"
+    fi
+    if ! command -v uv &>/dev/null; then
+        echo "Installing uv..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh || echo "[dotfiles] WARNING: uv install failed"
+    fi
+else
+    # Install homebrew (macos) or linuxbrew
+    if ! command -v brew &> /dev/null; then
+        echo "Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Add brew to PATH for this script
+        if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        fi
+    fi
+
+    # Core tools (always installed)
+    echo "Installing core tools..."
+    brew install git neovim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
+
+    # Set zsh as default shell
+    if [[ "$SHELL" != *"zsh"* ]]; then
+        echo "Setting zsh as default shell..."
+        ZSH_PATH=$(which zsh)
+        if ! grep -q "$ZSH_PATH" /etc/shells; then
+            echo "$ZSH_PATH" | sudo tee -a /etc/shells
+        fi
+        sudo chsh -s "$ZSH_PATH" "$USER"
+    fi
+
+    # Bun
+    if ! command -v bun &> /dev/null; then
+        echo "Installing Bun..."
+        curl -fsSL https://bun.sh/install | bash
+    fi
+
+    # uv (fast python package manager)
+    if ! command -v uv &> /dev/null; then
+        echo "Installing uv..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+    fi
 fi
 
 # Heavy neovim dependencies (skip in minimal mode)
@@ -128,10 +225,10 @@ if ! $MINIMAL; then
     fi
 fi
 
-# asdf for version management
-if [ ! -d "$HOME/.asdf" ]; then
-    echo "Installing asdf..."
-    git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
+# mise for version management (replaces asdf)
+if ! command -v mise &>/dev/null && [ ! -x "$HOME/.local/bin/mise" ]; then
+    echo "Installing mise..."
+    curl -fsSL https://mise.run | sh
 fi
 
 # zinit (zsh plugin manager)
@@ -224,7 +321,7 @@ if command -v ya >/dev/null 2>&1; then
 fi
 
 # Install TPM if not present
-if [ ! -d ~/.config/tmux/plugins/tpm ]; then
+if command -v tmux &>/dev/null && [ ! -d ~/.config/tmux/plugins/tpm ]; then
     echo "Installing TPM..."
     git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
 fi
@@ -281,14 +378,13 @@ if ! $MINIMAL; then
     echo "Copy to ~/.cursor/mcp.json and fill in API keys"
 fi
 
-# Node.js via asdf (optional)
-if [ -d "$HOME/.asdf" ]; then
-    source "$HOME/.asdf/asdf.sh"
-    if ! asdf plugin list | grep -q nodejs; then
-        echo "Adding nodejs plugin to asdf..."
-        asdf plugin add nodejs
-        asdf install nodejs latest
-        asdf global nodejs latest
+# Node.js via mise (optional)
+MISE_BIN="$(command -v mise || true)"
+[ -z "$MISE_BIN" ] && [ -x "$HOME/.local/bin/mise" ] && MISE_BIN="$HOME/.local/bin/mise"
+if [ -n "$MISE_BIN" ]; then
+    if ! "$MISE_BIN" ls node 2>/dev/null | grep -q .; then
+        echo "Installing Node.js via mise..."
+        "$MISE_BIN" use -g node@lts
     fi
 fi
 
