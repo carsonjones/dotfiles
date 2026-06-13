@@ -122,9 +122,11 @@ zinit ice depth=1; zinit light romkatv/powerlevel10k
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
-# zsh-histdb shells out to sqlite3 on load; skip it where sqlite3 is absent
-# (e.g. --skimm boxes) to avoid migration errors on every prompt.
-command -v sqlite3 &>/dev/null && zinit light larkery/zsh-histdb
+# zsh-histdb shells out to the sqlite3 BINARY on load. Because we define a
+# sqlite3() wrapper function above, `command -v sqlite3` is ALWAYS true — so use
+# `whence -p` (external commands only) to detect a real binary and skip histdb
+# where none exists (e.g. --skimm / RDE boxes), avoiding migration errors.
+whence -p sqlite3 &>/dev/null && zinit light larkery/zsh-histdb
 
 # OMZ snippets
 zinit snippet OMZP::git
