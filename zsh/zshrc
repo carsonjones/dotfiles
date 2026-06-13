@@ -122,7 +122,9 @@ zinit ice depth=1; zinit light romkatv/powerlevel10k
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
-zinit light larkery/zsh-histdb
+# zsh-histdb shells out to sqlite3 on load; skip it where sqlite3 is absent
+# (e.g. --skimm boxes) to avoid migration errors on every prompt.
+command -v sqlite3 &>/dev/null && zinit light larkery/zsh-histdb
 
 # OMZ snippets
 zinit snippet OMZP::git
@@ -456,6 +458,69 @@ symlinks() {
         fi
         printf "%s\t%s\t%s\n" "$status" "$link" "$target"
     done | column -t -s $'\t'
+}
+
+########################################
+# GIT (universal — overrides OMZ defaults)
+########################################
+
+alias gst='git status'
+alias gd='git diff'
+alias gco='git checkout'
+alias gcb='git checkout -b'
+alias gcp='git checkout -p'
+alias gca='git commit -am'
+alias gane='git commit --amend --no-edit'
+alias gpf='git push -f'
+alias gr='git fetch && git rebase origin/master'
+alias ga='git add'
+alias gaa='git add --all'
+alias gs='git-spice'
+alias rr='reset-repo'
+
+# Push current branch (sets upstream if needed)
+unalias gp 2>/dev/null
+gp() {
+  local branch=$(git branch --show-current)
+  git push || git push --set-upstream origin "$branch"
+}
+
+# Add changelog and commit
+gac() {
+  git add changelogs/
+  git commit -m "Add clog entry"
+}
+
+# Reset to origin (destructive)
+reset-repo() {
+  local branch=$(git branch --show-current)
+  git fetch origin
+  git reset --hard "origin/$branch"
+}
+
+# Reset to origin with safety backup
+reset-repo-safe() {
+  local branch=$(git branch --show-current)
+  git commit -a -m "checkpoint"
+  git branch "stash-$(date +%Y-%m-%d-%H-%M-%S)"
+  git checkout "$branch"
+  git fetch origin
+  git reset --hard "origin/$branch"
+}
+
+########################################
+# MISC (universal)
+########################################
+
+alias python='python3'
+alias to_json='python3 -m json.tool --sort-keys'
+alias web-server='python3 -m http.server'
+alias sourcezsh='source ~/.zshrc'
+
+# Simple calculator
+calc() {
+  local result=$(( $1 ))
+  echo "$1 = $result"
 }
 
 ########################################
