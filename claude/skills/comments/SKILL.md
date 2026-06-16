@@ -62,3 +62,4 @@ If the user only wants to clear comments for one file, don't run `clear` (it wip
 
 - The plugin and this skill must agree on the slug rule (`/` → `%`) and the `~/.local/share/comments` directory. The capture side lives in `~/src/dotfiles/nvim/lua/comments.lua`.
 - Records are append-only; the same line may have multiple comments. Address them all.
+- `comments.py` is a standalone CLI for the user (run via `uv run`): `list` shows every queued comment across **all** repos, `rm <id>...` removes records by id (archiving the touched queue first), and bare `rm` opens an interactive picker. Separate from this skill's automated flow.
