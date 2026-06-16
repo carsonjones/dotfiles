@@ -324,6 +324,7 @@ alias yz="yazi"
 # alias pnpx="_sfw pnpx"
 # alias yarn="_sfw yarn"
 # alias bun="_sfw bun"
+alias comments="uv run ~/src/dotfiles/claude/skills/comments/comments.py"
 
 ########################################
 # FUNCTIONS

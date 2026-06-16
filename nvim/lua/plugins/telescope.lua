@@ -215,6 +215,17 @@ return {
     config = function()
       require('telescope').setup {
         defaults = {
+          -- rg won't descend into symlinks without --follow; match find_files behavior.
+          vimgrep_arguments = {
+            'rg',
+            '--color=never',
+            '--no-heading',
+            '--with-filename',
+            '--line-number',
+            '--column',
+            '--smart-case',
+            '--follow',
+          },
           dynamic_preview_title = true,
           path_display = { 'truncate' },
           mappings = {
@@ -252,6 +263,10 @@ return {
           },
         },
         pickers = {
+          -- fd defaults to `--type f`, which skips symlinks (they are type `l`).
+          -- `--follow` resolves them to their real target so symlinked files
+          -- (e.g. ~/main/scratch/*.md -> ~/src/cjones/...) show up in <leader>sf.
+          find_files = { find_command = { 'fd', '--type', 'f', '--follow', '--color', 'never' } },
           lsp_references = { fname_width = 60 },
           lsp_definitions = { fname_width = 60 },
           lsp_implementations = { fname_width = 60 },
