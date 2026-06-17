@@ -5,4 +5,6 @@
 prepend_keymap = [
 	# Vim-style :q to quit
 	{ on = [":", "q"], run = "quit", desc = "Quit yazi" },
+	# Fuzzy-find files/dirs rooted at the launch cwd (vs. Z, which follows you)
+	{ on = "<C-p>", run = "plugin fzf-root", desc = "Fuzzy-find from launch dir" },
 ]

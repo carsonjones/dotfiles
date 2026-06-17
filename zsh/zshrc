@@ -184,6 +184,12 @@ fi
 
 # fzf
 command -v fzf &>/dev/null && eval "$(fzf --zsh)"
+# Use fd as fzf's source: respects .gitignore, includes hidden, skips .git.
+# Drives Ctrl-T, the **<TAB>** completions, and the yazi fzf-root plugin.
+if command -v fd &>/dev/null; then
+	export FZF_DEFAULT_COMMAND='fd --type f --type d --hidden --follow --exclude .git'
+	export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
 
 # rust
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
