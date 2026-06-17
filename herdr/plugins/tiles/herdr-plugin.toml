@@ -1,0 +1,39 @@
+id = "local.tiles"
+name = "Tiles"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Tile the current pane into common proportions. Each pair has a flip."
+platforms = ["linux", "macos"]
+
+# Even (50/50) splits.
+[[actions]]
+id = "h-even"
+title = "Tile ⇆ even 50/50"
+command = ["python3", "tile.py", "h", "0.5"]
+
+[[actions]]
+id = "v-even"
+title = "Tile ⇅ even 50/50"
+command = ["python3", "tile.py", "v", "0.5"]
+
+# Horizontal (left | right). The CURRENT pane is the LEFT section.
+[[actions]]
+id = "h-wide"
+title = "Tile ⇆ current 6/10 | 4/10"
+command = ["python3", "tile.py", "h", "0.6"]
+
+[[actions]]
+id = "h-narrow"
+title = "Tile ⇆ current 4/10 | 6/10 (flip)"
+command = ["python3", "tile.py", "h", "0.4"]
+
+# Vertical (top / bottom). The CURRENT pane is the TOP section.
+[[actions]]
+id = "v-top-small"
+title = "Tile ⇅ current 1/5 top, 4/5 bottom"
+command = ["python3", "tile.py", "v", "0.2"]
+
+[[actions]]
+id = "v-top-large"
+title = "Tile ⇅ current 4/5 top, 1/5 bottom (flip)"
+command = ["python3", "tile.py", "v", "0.8"]

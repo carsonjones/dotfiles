@@ -10,6 +10,45 @@ next_tab = "alt+]"
 [keys.indexed]
 tabs = "alt"
 
+# tiles plugin (herdr/plugins/tiles): tile the current pane.
+#   prefix+y = horizontal, prefix+u = vertical.
+#   +shift "flips" the big/small side; +alt "reverts" to an even 50/50 split.
+[[keys.command]]
+key = "prefix+y"
+type = "plugin_action"
+command = "local.tiles.h-wide"
+description = "tile: horizontal, current 6/10 left"
+
+[[keys.command]]
+key = "prefix+shift+y"
+type = "plugin_action"
+command = "local.tiles.h-narrow"
+description = "tile: horizontal flip, current 4/10 left"
+
+[[keys.command]]
+key = "prefix+alt+y"
+type = "plugin_action"
+command = "local.tiles.h-even"
+description = "tile: horizontal revert, even 50/50"
+
+[[keys.command]]
+key = "prefix+u"
+type = "plugin_action"
+command = "local.tiles.v-top-small"
+description = "tile: vertical, current 1/5 top"
+
+[[keys.command]]
+key = "prefix+shift+u"
+type = "plugin_action"
+command = "local.tiles.v-top-large"
+description = "tile: vertical flip, current 4/5 top"
+
+[[keys.command]]
+key = "prefix+alt+u"
+type = "plugin_action"
+command = "local.tiles.v-even"
+description = "tile: vertical revert, even 50/50"
+
 [theme]
 name = "one-dark"
 
