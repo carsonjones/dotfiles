@@ -1,0 +1,8 @@
+.svelte-kit/**
+static/**
+build/**
+node_modules/**
+coverage/**
+__snapshots__/**
+snapshots.js
+pnpm-lock.yaml

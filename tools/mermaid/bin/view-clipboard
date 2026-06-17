@@ -1,0 +1,117 @@
+#!/usr/bin/env bun
+// view-clipboard — render the clipboard's contents as a Mermaid diagram.
+//
+// Grabs the current clipboard text, encodes it into the editor's URL hash
+// (same scheme as src/lib/util/serde.ts: zlib-deflate -> base64url, "pako:"
+// prefix), makes sure the prebuilt preview server is up on a fixed port, and
+// opens the default browser straight to that diagram.
+//
+// The server is started detached and left running, so the first call pays the
+// startup cost and later calls are instant. macOS only (pbpaste / open).
+//
+// Flags:
+//   --rebuild, -r   rebuild the app (after editing source) and restart the server
+//   --restart       restart the server without rebuilding
+//   --help, -h      show this help
+
+import { spawn, spawnSync } from 'node:child_process';
+import { deflateSync } from 'node:zlib';
+import { existsSync, openSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+
+const PORT = 4321;
+const BASE = `http://localhost:${PORT}`;
+const ROOT = dirname(import.meta.dir); // .../tools/mermaid
+const LOG = '/tmp/mermaid-preview.log';
+
+// --- 0. flags ---------------------------------------------------------------
+const args = process.argv.slice(2);
+if (args.includes('--help') || args.includes('-h')) {
+  console.log(
+    'Usage: view-clipboard [--rebuild|-r] [--restart]\n' +
+      '  --rebuild, -r   rebuild the app (after editing source) and restart the server\n' +
+      '  --restart       restart the server without rebuilding'
+  );
+  process.exit(0);
+}
+const wantRebuild = args.includes('--rebuild') || args.includes('-r');
+const wantRestart = wantRebuild || args.includes('--restart');
+
+// --- 1. clipboard -----------------------------------------------------------
+const clip = spawnSync('pbpaste', { encoding: 'utf8' }).stdout?.replace(/\s+$/, '') ?? '';
+if (!clip.trim()) {
+  console.error('Clipboard is empty — copy some Mermaid source first.');
+  process.exit(1);
+}
+
+// --- 2. encode to the editor's URL hash -------------------------------------
+const state = {
+  code: clip,
+  mermaid: JSON.stringify({ theme: 'default' }, null, 2),
+  grid: true,
+  panZoom: true,
+  rough: false,
+  updateDiagram: true
+};
+const hash = 'pako:' + deflateSync(Buffer.from(JSON.stringify(state), 'utf8'), { level: 9 }).toString('base64url');
+const url = `${BASE}/edit?collapse#${hash}`;
+
+// --- 3. ensure the preview server is up -------------------------------------
+async function serverUp(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/edit`, { signal: AbortSignal.timeout(700) });
+    return res.ok && (await res.text()).includes('id="svelte"'); // our app, not some other :4321
+  } catch {
+    return false;
+  }
+}
+
+function buildApp(): void {
+  console.error('Building the editor…');
+  const build = spawnSync('bun', ['run', 'build'], { cwd: ROOT, stdio: 'inherit' });
+  if (build.status !== 0) {
+    console.error('Build failed.');
+    process.exit(1);
+  }
+}
+
+function killServer(): void {
+  // Kill whatever is bound to PORT (our detached preview server).
+  const pids = spawnSync('lsof', ['-ti', `tcp:${PORT}`], { encoding: 'utf8' }).stdout?.trim();
+  if (pids) {
+    spawnSync('kill', pids.split('\n'));
+  }
+}
+
+if (wantRebuild) buildApp();
+if (wantRestart) {
+  console.error('Restarting preview server…');
+  killServer();
+  // give the OS a moment to release the port before --strictPort rebinds it
+  while (await serverUp()) await Bun.sleep(150);
+}
+
+if (!(await serverUp())) {
+  if (!existsSync(join(ROOT, 'build', 'index.html'))) buildApp();
+
+  console.error(`Starting preview server on ${BASE} …`);
+  const out = openSync(LOG, 'a');
+  spawn('bun', ['run', 'preview', '--', '--port', String(PORT), '--strictPort'], {
+    cwd: ROOT,
+    detached: true,
+    stdio: ['ignore', out, out]
+  }).unref();
+
+  const deadline = Date.now() + 20_000;
+  while (!(await serverUp())) {
+    if (Date.now() > deadline) {
+      console.error(`Server didn't come up within 20s — see ${LOG}`);
+      process.exit(1);
+    }
+    await Bun.sleep(300);
+  }
+}
+
+// --- 4. open it -------------------------------------------------------------
+spawn('open', [url], { detached: true, stdio: 'ignore' }).unref();
+console.log(`Opened clipboard diagram (${clip.split('\n').length} lines) in the browser.`);
