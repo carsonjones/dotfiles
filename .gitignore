@@ -1,4 +1,5 @@
 *.local
+node_modules/
 **/mcp.json
 !mcp.json.template
 .DS_Store

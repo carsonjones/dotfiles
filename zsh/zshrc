@@ -257,6 +257,7 @@ alias :qd="__detach_or_exit"
 alias :QD="__detach_or_exit"
 alias review='git diff | comview'
 alias review-staged='git diff --staged | comview'
+alias ccyp="claude --dangerously-skip-permissions -p"
 alias qp='claude --dangerously-skip-permissions -p ~/src/scripts/quick-prompt.md'
 alias eqp='nvim ~/src/scripts/quick-prompt.md'
 
@@ -546,3 +547,7 @@ command -v mise &>/dev/null && eval "$(mise activate zsh)"
 
 # safe-chain: ensure binary is found before mise shims
 [ -d "$HOME/.safe-chain/bin" ] && export PATH="$HOME/.safe-chain/bin:$PATH"
+
+# herdr — running AI agents (live OpenTUI dashboard, diff-rendered, arrow-key focus).
+alias agents='bun ~/src/dotfiles/tools/herdr-agents.tsx'
+alias agentsw='bun ~/src/dotfiles/tools/herdr-agents.tsx'
