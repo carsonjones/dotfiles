@@ -332,7 +332,16 @@ ln -sf "$DOTFILES/yazi/keymap.toml" ~/.config/yazi/keymap.toml
 ln -sf "$DOTFILES/yazi/init.lua" ~/.config/yazi/init.lua
 ln -sf "$DOTFILES/yazi/package.toml" ~/.config/yazi/package.toml
 if command -v ya >/dev/null 2>&1; then
+    # Fetch declared deps (e.g. git.yazi) into ~/.config/yazi/plugins/
     ya pkg install >/dev/null 2>&1 || true
+fi
+# Link local (in-repo) yazi plugins, e.g. fzf-root.yazi used by the <C-p> keymap.
+# `ya pkg install` only handles remote deps, so these must be linked by hand.
+if [ -d "$DOTFILES/yazi/plugins" ]; then
+    mkdir -p ~/.config/yazi/plugins
+    for plugin in "$DOTFILES"/yazi/plugins/*/; do
+        [ -d "$plugin" ] && ln -sfn "${plugin%/}" "$HOME/.config/yazi/plugins/$(basename "$plugin")"
+    done
 fi
 
 # Install TPM if not present
