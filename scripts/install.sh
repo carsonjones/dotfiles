@@ -55,9 +55,12 @@ if $SKIMM; then
 
     # apt packages (best-effort; never abort the whole bootstrap on one failure)
     if command -v apt-get &>/dev/null; then
-        echo "Installing apt packages (ripgrep, fd, bat, fzf, git, unzip)..."
+        echo "Installing apt packages (ripgrep, fd, bat, git, unzip)..."
         sudo apt-get update -y || true
-        sudo apt-get install -y git fzf fd-find bat ripgrep unzip curl ca-certificates tar || true
+        # NOTE: fzf is NOT installed via apt — Ubuntu's fzf predates `fzf --zsh`
+        # (added in 0.48.0), which zsh/zshrc needs for the Ctrl-R history widget.
+        # It's installed from a GitHub release below instead.
+        sudo apt-get install -y git fd-find bat ripgrep unzip curl ca-certificates tar || true
         # Ubuntu ships these under alternate names; expose canonical ones
         [ -x /usr/bin/fdfind ] && ln -sf /usr/bin/fdfind "$LOCAL_BIN/fd"
         [ -x /usr/bin/batcat ] && ln -sf /usr/bin/batcat "$LOCAL_BIN/bat"
@@ -75,6 +78,18 @@ if $SKIMM; then
                 | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
             sudo apt-get update -y && sudo apt-get install -y gh
         } || echo "[dotfiles] WARNING: gh install failed"
+    fi
+
+    # fzf — release binary (apt's fzf predates `fzf --zsh`, needed for the
+    # Ctrl-R history widget in zsh/zshrc). The `fzf --zsh` guard also catches a
+    # stale apt fzf left over from a previous bootstrap, not just a missing one.
+    if ! fzf --zsh &>/dev/null; then
+        echo "Installing fzf (release binary)..."
+        {
+            ver="$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/junegunn/fzf/releases/latest | sed 's#.*/tag/v##')"
+            curl -fsSL "https://github.com/junegunn/fzf/releases/download/v${ver}/fzf-${ver}-linux_amd64.tar.gz" \
+                | tar -xz -C "$LOCAL_BIN"
+        } || echo "[dotfiles] WARNING: fzf install failed"
     fi
 
     # neovim — release tarball (apt's nvim is too old for this config)
