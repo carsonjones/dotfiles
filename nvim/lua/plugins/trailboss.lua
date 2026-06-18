@@ -1,5 +1,6 @@
 return {
   dir = '~/src/trailboss/nvim',
+  enabled = vim.fn.isdirectory(vim.fn.expand '~/src/trailboss/nvim') == 1,
   dependencies = {
     {
       'rcarriga/nvim-notify',

@@ -12,10 +12,5 @@ require 'config.keymaps'
 require 'config.autocmds'
 require 'config.lazy'
 
-require('trailboss').setup {
-  source_path = '~/.local/share/trailboss/comments.jsonl',
-  -- source_path = '/tmp/trailboss-dev.jsonl',
-}
-
 -- Queue review comments (<leader>hc) for the /comments Claude skill to address.
 require('comments').setup {}
