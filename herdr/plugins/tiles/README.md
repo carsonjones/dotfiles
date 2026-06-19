@@ -1,7 +1,6 @@
 # tiles
 
-A tiny herdr plugin: keyboard shortcuts to tile the **current** pane into common
-proportions, with a "flip" for each so you can swap the big/small side.
+A tiny herdr plugin: keyboard shortcuts to tile the **current** pane into common proportions, with a "flip" for each so you can swap the big/small side.
 
 | Action id      | What it does                                  | Suggested key      |
 |----------------|-----------------------------------------------|--------------------|
@@ -12,21 +11,16 @@ proportions, with a "flip" for each so you can swap the big/small side.
 | `v-top-large`  | Flip → current pane = top **4/5**            | `prefix+shift+u`   |
 | `v-even`       | Revert → vertical **50/50**                  | `prefix+alt+u`     |
 
-`prefix+y` = horizontal, `prefix+u` = vertical. The `shift` modifier **flips**
-the big/small side; the `alt` modifier **reverts** to an even 50/50 split.
+`prefix+y` = horizontal, `prefix+u` = vertical. The `shift` modifier **flips** the big/small side; the `alt` modifier **reverts** to an even 50/50 split.
 
-The **current/selected** pane is always the leading section (left for horizontal,
-top for vertical).
+The **current/selected** pane is always the leading section (left for horizontal, top for vertical).
 
 ## Split vs. resize (why flip doesn't spawn a third pane)
 
-- If the current pane has **no neighbour** on that axis, it is **split** so the
-  current pane becomes the leading side at the target fraction.
-- If a neighbour **already exists**, the divider is **resized** to hit the target
-  fraction instead — so the flip re-proportions the existing two panes.
+- If the current pane has **no neighbour** on that axis, it is **split** so the current pane becomes the leading side at the target fraction.
+- If a neighbour **already exists**, the divider is **resized** to hit the target fraction instead — so the flip re-proportions the existing two panes.
 
-Works best on a tab holding one or two panes. With deeper nesting it operates on
-the current pane and its immediate neighbour on the chosen axis.
+Works best on a tab holding one or two panes. With deeper nesting it operates on the current pane and its immediate neighbour on the chosen axis.
 
 ## Install / develop
 
@@ -55,9 +49,7 @@ herdr plugin action list --plugin local.tiles   # verify it loaded
 
 ## Keybindings
 
-Add to `~/.config/herdr/config.toml` (this repo's `herdr/config.toml`). These
-keys avoid herdr's built-in defaults: `prefix+y` = horizontal, `prefix+u` =
-vertical, with `shift` to flip and `alt` to revert to 50/50.
+Add to `~/.config/herdr/config.toml` (this repo's `herdr/config.toml`). These keys avoid herdr's built-in defaults: `prefix+y` = horizontal, `prefix+u` = vertical, with `shift` to flip and `alt` to revert to 50/50.
 
 ```toml
 [[keys.command]]
@@ -97,11 +89,9 @@ command = "local.tiles.v-even"
 description = "tile: vertical revert, even 50/50"
 ```
 
-Reload with `herdr server reload-config` — a `status: applied` with no
-diagnostics means all six bindings are active.
+Reload with `herdr server reload-config` — a `status: applied` with no diagnostics means all six bindings are active.
 
-## How the herdr resize model works (learned empirically on 0.7.0)
-
+## How the herdr resize model works
 - `pane split --ratio R` → the **original** (leading) pane keeps fraction `R`.
 - `pane resize --direction D --amount A --pane X` grows pane `X`'s edge on side
   `D` outward by `A` (a fraction of the split span). An **outer** edge is a wall,
