@@ -125,7 +125,7 @@ zinit light zsh-users/zsh-autosuggestions
 # zsh-histdb shells out to the sqlite3 BINARY on load. Because we define a
 # sqlite3() wrapper function above, `command -v sqlite3` is ALWAYS true — so use
 # `whence -p` (external commands only) to detect a real binary and skip histdb
-# where none exists (e.g. --skimm / RDE boxes), avoiding migration errors.
+# where none exists (e.g. --slim ), avoiding migration errors.
 whence -p sqlite3 &>/dev/null && zinit light larkery/zsh-histdb
 
 # OMZ snippets

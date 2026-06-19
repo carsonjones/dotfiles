@@ -4,7 +4,7 @@ set -e
 DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 [ -n "$DOTFILES" ] || { echo "error: DOTFILES unset, refusing to link" >&2; exit 1; }
 MINIMAL=false
-SKIMM=false
+SLIM=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -13,17 +13,17 @@ while [[ $# -gt 0 ]]; do
             MINIMAL=true
             shift
             ;;
-        --skimm)
+        --slim|-s)
             # provision a curated tool set the Linux-native way
             # (apt/curl/release binaries — no Homebrew), then link configs.
             # Implies --minimal (no desktop apps / heavy nvim plugins).
-            SKIMM=true
+            SLIM=true
             MINIMAL=true
             shift
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: install.sh [--minimal] [--skimm]"
+            echo "Usage: install.sh [--minimal] [--slim]"
             exit 1
             ;;
     esac
@@ -31,7 +31,7 @@ done
 
 echo "Installing dotfiles from $DOTFILES"
 $MINIMAL && echo "(minimal mode - skipping desktop apps and heavy plugins)"
-$SKIMM && echo "(skimm mode: apt/curl tools, no Homebrew)"
+$SLIM && echo "(slim mode: apt/curl tools, no Homebrew)"
 
 # Detect OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -43,11 +43,11 @@ else
     exit 1
 fi
 
-if $SKIMM; then
+if $SLIM; then
     ########################################
     # tool set via apt + official curl installers + GitHub release binaries.
     ########################################
-    [ "$OS" = "linux" ] || { echo "error: --skimm is Linux-only (got $OS)" >&2; exit 1; }
+    [ "$OS" = "linux" ] || { echo "error: --slim is Linux-only (got $OS)" >&2; exit 1; }
 
     LOCAL_BIN="$HOME/.local/bin"
     mkdir -p "$LOCAL_BIN"
