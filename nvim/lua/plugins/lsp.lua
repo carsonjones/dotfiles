@@ -140,6 +140,14 @@ return {
           },
         },
         ruff = {},
+        rust_analyzer = {
+          settings = {
+            ['rust-analyzer'] = {
+              check = { command = 'clippy' },
+              cargo = { features = 'all' },
+            },
+          },
+        },
         tailwindcss = {},
         lua_ls = {
           settings = {

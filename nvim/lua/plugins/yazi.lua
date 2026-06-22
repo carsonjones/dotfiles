@@ -9,7 +9,7 @@ return {
     { '<leader>tE', '<cmd>Yazi cwd<cr>', desc = '[T]oggle [E]xplorer at cwd (yazi)' },
   },
   opts = {
-    open_for_directories = false,
+    open_for_directories = true,
     floating_window_scaling_factor = 1.0,
     yazi_floating_window_border = 'none',
     keymaps = {

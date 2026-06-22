@@ -266,7 +266,11 @@ return {
           -- fd defaults to `--type f`, which skips symlinks (they are type `l`).
           -- `--follow` resolves them to their real target so symlinked files
           -- (e.g. ~/main/scratch/*.md -> ~/src/cjones/...) show up in <leader>sf.
-          find_files = { find_command = { 'fd', '--type', 'f', '--follow', '--color', 'never' } },
+          -- Fall back to telescope's built-in finder if fd is missing so the
+          -- picker doesn't error out with "Executable not found".
+          find_files = vim.fn.executable 'fd' == 1
+              and { find_command = { 'fd', '--type', 'f', '--follow', '--color', 'never' } }
+            or {},
           lsp_references = { fname_width = 60 },
           lsp_definitions = { fname_width = 60 },
           lsp_implementations = { fname_width = 60 },
