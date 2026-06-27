@@ -7,7 +7,7 @@
 #   scripts/link.sh nvim claude     # link only the named components
 #   scripts/link.sh -m yazi         # minimal + only yazi
 #
-# Components: zsh nvim ghostty zed zellij herdr comview tmux yazi claude pi codex
+# Components: zsh nvim ghostty zed zellij herdr comview tmux yazi agents claude pi codex
 set -e
 
 DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
@@ -129,19 +129,30 @@ link_yazi() {
     fi
 }
 
+link_agent_skills() {
+    # Shared Agent Skills used by multiple harnesses. Link per-item so local/user
+    # skills already present in the destination are left untouched.
+    local dest="$1"
+    [ -d "$DOTFILES/agents/skills" ] || return 0
+    mkdir -p "$dest"
+    for item in "$DOTFILES"/agents/skills/*; do
+        [ -e "$item" ] && ln -sfn "$item" "$dest/$(basename "$item")"
+    done
+}
+
+link_agents() {
+    echo "Linking shared agent skills..."
+    link_agent_skills "$HOME/.agents/skills"
+}
+
 link_claude() {
     echo "Linking claude config..."
     mkdir -p ~/.claude
     ln -sf "$DOTFILES/claude/settings.json" ~/.claude/settings.json
     ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md
     ln -sf "$DOTFILES/claude/mcp_settings.json" ~/.claude/mcp_settings.json
-    # Skills per-item (leaves other skills in ~/.claude/skills untouched)
-    if [ -d "$DOTFILES/claude/skills" ]; then
-        mkdir -p ~/.claude/skills
-        for item in "$DOTFILES"/claude/skills/*; do
-            [ -e "$item" ] && ln -sfn "$item" "$HOME/.claude/skills/$(basename "$item")"
-        done
-    fi
+    link_agent_skills "$HOME/.agents/skills"
+    link_agent_skills "$HOME/.claude/skills"
 }
 
 link_pi() {
@@ -159,6 +170,8 @@ link_pi() {
             done
         fi
     done
+    link_agent_skills "$HOME/.agents/skills"
+    link_agent_skills "$HOME/.pi/agent/skills"
     # Vibes are generated data; link the whole dir when safe so `/vibe generate` is tracked.
     if [ -d "$DOTFILES/pi/vibes" ]; then
         if [ ! -e "$HOME/.pi/agent/vibes" ] || [ -L "$HOME/.pi/agent/vibes" ]; then
@@ -174,6 +187,8 @@ link_pi() {
 link_codex() {
     echo "Linking codex config..."
     ln -sfn "$DOTFILES/.codex" ~/.codex
+    link_agent_skills "$HOME/.agents/skills"
+    link_agent_skills "$HOME/.codex/skills"
 }
 
 link_all() {
@@ -188,6 +203,7 @@ link_all() {
     link_comview
     link_tmux
     link_yazi
+    link_agents
     link_claude
     link_pi
     link_codex

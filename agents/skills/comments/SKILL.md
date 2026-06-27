@@ -16,7 +16,7 @@ This is decoupled from any diff viewer: comments can land on **any line of any f
 The plugin writes one JSONL file per repo at `~/.local/share/comments/<slug>.jsonl` (slug = repo root with `/` → `%`). Read this repo's queue with the bundled helper:
 
 ```bash
-bash ~/.claude/skills/comments/comments.sh read
+bash ~/.agents/skills/comments/comments.sh read
 ```
 
 Each line is a JSON record:
@@ -53,7 +53,7 @@ Batch related edits, but keep the user in the loop on anything non-obvious or ha
 Do **not** clear the queue automatically. After the user confirms the work is done and asks to clear / reset / "fresh slate", archive the file (recoverable) then truncate it:
 
 ```bash
-bash ~/.claude/skills/comments/comments.sh clear
+bash ~/.agents/skills/comments/comments.sh clear
 ```
 
 If the user only wants to clear comments for one file, don't run `clear` (it wipes the whole queue). Instead archive a copy, then rewrite the file keeping only records whose `rel` doesn't match the cleared file (e.g. with `jq`).
