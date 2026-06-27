@@ -61,6 +61,9 @@ name = "one-dark"
 # Slightly darker than the panel so selection reads even with terminal opacity.
 surface_dim = "#1f232a"  # selected sidebar row background
 accent = "#61afef"        # selection border + nav accents (one-dark blue)
+# Match the panel/tab-strip background to the ghostty terminal bg (#252A34)
+# so the chrome doesn't read as a slightly-off band against the panes.
+panel_bg = "#252A34"
 
 [ui]
 agent_panel_scope = "all"
