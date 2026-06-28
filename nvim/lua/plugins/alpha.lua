@@ -12,7 +12,7 @@ return {
     }
 
     dashboard.section.buttons.val = {
-      dashboard.button('s', '  Restore session', function() require('persistence').load() end),
+      dashboard.button('s', '  Restore session', '<cmd>lua require("persistence").load()<CR>'),
       dashboard.button('f', '  Find file', ':Telescope find_files<CR>'),
       dashboard.button('r', '  Recent files', ':Telescope oldfiles<CR>'),
       dashboard.button('g', '  Live grep', ':Telescope live_grep<CR>'),
