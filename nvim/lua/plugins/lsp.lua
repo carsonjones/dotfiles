@@ -28,7 +28,14 @@ return {
             vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
-          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          map('gd', function()
+            -- In markdown, follow the wikilink/link under the cursor (tailwindcss
+            -- attaches here but doesn't support textDocument/definition).
+            if vim.bo[event.buf].filetype == 'markdown' and require('obsidian').util.cursor_on_markdown_link(nil, nil, true) then
+              return vim.cmd 'ObsidianFollowLink'
+            end
+            require('telescope.builtin').lsp_definitions()
+          end, '[G]oto [D]efinition')
           map('gr', function()
             require('telescope.builtin').lsp_references { prompt_title = 'References: ' .. vim.fn.expand '<cword>' }
           end, '[G]oto [R]eferences')

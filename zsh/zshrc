@@ -235,6 +235,15 @@ __detach_or_exit() {
   builtin exit "$@"
 }
 
+# vim :qa ("quit all") -> close the whole herdr tab; plain exit elsewhere.
+__herdr_close_tab() {
+  if [[ -n "${HERDR_ENV:-}" && -n "${HERDR_TAB_ID:-}" ]] && command -v herdr >/dev/null 2>&1; then
+    herdr tab close "$HERDR_TAB_ID" >/dev/null 2>&1
+    return $?
+  fi
+  builtin exit "$@"
+}
+
 alias ls='ls -G'
 alias hist='histdb'
 alias zsh="nvim ~/.zshrc"
@@ -278,6 +287,8 @@ alias :qk="__smart_exit --kill-session"
 alias :QK="__smart_exit --kill-session"
 alias :qd="__detach_or_exit"
 alias :QD="__detach_or_exit"
+alias :qa="__herdr_close_tab"
+alias :QA="__herdr_close_tab"
 alias review='git diff | comview'
 alias review-staged='git diff --staged | comview'
 alias ccyp="claude --dangerously-skip-permissions -p"
@@ -292,7 +303,8 @@ alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && k
 alias src="cd ~/src"
 alias main="cd ~/main"
 alias jonze="cd ~/src/jonze"
-alias dotfiles="cd ~/src/dotfiles"
+alias dotfiles="cd $DOTFILES_ROOT"
+alias dots="dotfiles"
 alias config="cd ~/.config"
 
 ## Git
@@ -355,6 +367,9 @@ alias yz="yazi"
 # alias yarn="_sfw yarn"
 # alias bun="_sfw bun"
 alias comments="uv run ~/src/dotfiles/agents/skills/comments/comments.py"
+
+CODEX="/Applications/Codex.app/Contents/Resources/codex"
+codex() { command "$CODEX" "$@"; } 
 
 ########################################
 # FUNCTIONS
