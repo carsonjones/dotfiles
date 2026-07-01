@@ -1,1 +1,2 @@
 - In all interactions and commit messages, be extremely concise and sacrafice grammar for sake of concision
+- Do not preserve backward compatibility with the existing prose; make the direct edits, always
