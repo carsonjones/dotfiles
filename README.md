@@ -25,3 +25,19 @@ INSTALL_ONLY=brew-core,mise,link scripts/install.sh
 ```
 
 Symlink refresh only (no tool installs): `scripts/link.sh` (`--minimal` optional).
+
+## maintenance
+
+```sh
+scripts/update.sh                     # git pull, relink, refresh brew / mise / bun / uv / nvim / ...
+scripts/update.sh --upgrade-plugins   # Lazy! sync (refresh lazy-lock.json) instead of restore
+scripts/update.sh --dry-run           # preview
+
+INSTALL_ONLY=zed,ghostty scripts/clean.sh          # uninstall components (mirrors install.sh)
+INSTALL_ONLY=fzf,nvim   scripts/clean.sh --slim    # slim-path removers
+
+scripts/nvim-disable.sh --list                     # toggleable nvim plugins
+scripts/nvim-disable.sh --disable '3rd/image.nvim' # mutate nvim/lua/local.lua (git-ignored)
+```
+
+The picker (`scripts/dotfiles-install`) exposes update / clean / nvim-plugin toggling as top-level actions too.
