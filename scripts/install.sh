@@ -5,6 +5,30 @@ DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 [ -n "$DOTFILES" ] || { echo "error: DOTFILES unset, refusing to link" >&2; exit 1; }
 MINIMAL=false
 SLIM=false
+LIST_COMPONENTS=false
+
+# Components installed by each provisioning path. Keep in sync with
+# scripts/picker/main.go (the TUI hardcodes the same lists).
+BREW_COMPONENTS=(brew-core imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link)
+SLIM_COMPONENTS=(apt-core gh fzf nvim yazi hunk herdr bun uv mise zinit node link)
+
+usage() {
+    cat <<'USAGE'
+Usage: install.sh [--minimal|-m] [--slim|-s] [--list-components]
+
+Provisions tools (Homebrew or apt/curl) and links dotfile configs.
+Use scripts/link.sh directly when you only need to refresh symlinks.
+
+  --minimal, -m       skip desktop apps and heavy nvim plugins
+  --slim, -s          apt/curl tools instead of Homebrew (Linux only; implies --minimal)
+  --list-components   print components for the selected path and exit
+
+Env:
+  INSTALL_ONLY=a,b,c  install only the named components (see --list-components).
+                      When set, mode gating (--minimal) is ignored; the caller
+                      is responsible for picking a coherent set.
+USAGE
+}
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -21,16 +45,53 @@ while [[ $# -gt 0 ]]; do
             MINIMAL=true
             shift
             ;;
+        --list-components)
+            LIST_COMPONENTS=true
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
         *)
-            echo "Unknown option: $1"
-            echo "Usage: install.sh [--minimal] [--slim]"
+            echo "Unknown option: $1" >&2
+            usage >&2
             exit 1
             ;;
     esac
 done
 
+if $LIST_COMPONENTS; then
+    if $SLIM; then
+        printf '%s\n' "${SLIM_COMPONENTS[@]}"
+    else
+        printf '%s\n' "${BREW_COMPONENTS[@]}"
+    fi
+    exit 0
+fi
+
+# --- component gating -------------------------------------------------------
+# `want X` is true when INSTALL_ONLY is unset (preset mode, install everything
+# the mode calls for) OR when X appears in the comma-separated INSTALL_ONLY.
+INSTALL_ONLY="${INSTALL_ONLY:-}"
+custom_mode() { [ -n "$INSTALL_ONLY" ]; }
+want() {
+    local name="$1"
+    if [ -z "$INSTALL_ONLY" ]; then
+        return 0
+    fi
+    case ",$INSTALL_ONLY," in
+        *,"$name",*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+# In preset mode we honor --minimal (skip heavy stuff). In custom mode the user
+# has opted into an explicit component list; we don't second-guess them.
+heavy_ok() { custom_mode || ! $MINIMAL; }
+
 echo "Installing dotfiles from $DOTFILES"
-$MINIMAL && echo "(minimal mode - skipping desktop apps and heavy plugins)"
+custom_mode && echo "(custom mode: INSTALL_ONLY=$INSTALL_ONLY)"
+$MINIMAL && ! custom_mode && echo "(minimal mode - skipping desktop apps and heavy plugins)"
 $SLIM && echo "(slim mode: apt/curl tools, no Homebrew)"
 
 # Detect OS
@@ -54,7 +115,7 @@ if $SLIM; then
     export PATH="$LOCAL_BIN:$PATH"
 
     # apt packages (best-effort; never abort the whole bootstrap on one failure)
-    if command -v apt-get &>/dev/null; then
+    if want apt-core && command -v apt-get &>/dev/null; then
         echo "Installing apt packages (ripgrep, fd, bat, git, unzip)..."
         sudo apt-get update -y || true
         # NOTE: fzf is NOT installed via apt — Ubuntu's fzf predates `fzf --zsh`
@@ -67,7 +128,7 @@ if $SLIM; then
     fi
 
     # gh — official apt repo (release asset names are version-pinned, so apt is cleaner)
-    if ! command -v gh &>/dev/null; then
+    if want gh && ! command -v gh &>/dev/null; then
         echo "Installing gh (GitHub CLI)..."
         {
             sudo mkdir -p -m 755 /etc/apt/keyrings
@@ -83,7 +144,7 @@ if $SLIM; then
     # fzf — release binary (apt's fzf predates `fzf --zsh`, needed for the
     # Ctrl-R history widget in zsh/zshrc). The `fzf --zsh` guard also catches a
     # stale apt fzf left over from a previous bootstrap, not just a missing one.
-    if ! fzf --zsh &>/dev/null; then
+    if want fzf && ! fzf --zsh &>/dev/null; then
         echo "Installing fzf (release binary)..."
         {
             ver="$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/junegunn/fzf/releases/latest | sed 's#.*/tag/v##')"
@@ -93,7 +154,7 @@ if $SLIM; then
     fi
 
     # neovim — release tarball (apt's nvim is too old for this config)
-    if ! command -v nvim &>/dev/null; then
+    if want nvim && ! command -v nvim &>/dev/null; then
         echo "Installing neovim (release tarball)..."
         {
             tmp="$(mktemp -d)"
@@ -105,7 +166,7 @@ if $SLIM; then
     fi
 
     # yazi — release zip (provides `ya` + `yazi`)
-    if ! command -v yazi &>/dev/null; then
+    if want yazi && ! command -v yazi &>/dev/null; then
         echo "Installing yazi (release zip)..."
         {
             tmp="$(mktemp -d)"
@@ -117,7 +178,7 @@ if $SLIM; then
     fi
 
     # hunk — release tarball (modem-dev/hunk; asset name is version-agnostic)
-    if ! command -v hunk &>/dev/null; then
+    if want hunk && ! command -v hunk &>/dev/null; then
         echo "Installing hunk (release tarball)..."
         {
             tmp="$(mktemp -d)"
@@ -129,68 +190,70 @@ if $SLIM; then
     fi
 
     # herdr — official Linux installer (Rust; installs to ~/.local/bin)
-    if ! command -v herdr &>/dev/null; then
+    if want herdr && ! command -v herdr &>/dev/null; then
         echo "Installing herdr..."
         curl -fsSL https://herdr.dev/install.sh | sh || echo "[dotfiles] WARNING: herdr install failed"
     fi
 
     # bun + uv — official curl installers
-    if ! command -v bun &>/dev/null; then
+    if want bun && ! command -v bun &>/dev/null; then
         echo "Installing bun..."
         curl -fsSL https://bun.sh/install | bash || echo "[dotfiles] WARNING: bun install failed"
     fi
-    if ! command -v uv &>/dev/null; then
+    if want uv && ! command -v uv &>/dev/null; then
         echo "Installing uv..."
         curl -LsSf https://astral.sh/uv/install.sh | sh || echo "[dotfiles] WARNING: uv install failed"
     fi
 else
-    # Install homebrew (macos) or linuxbrew
-    if ! command -v brew &> /dev/null; then
-        echo "Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Install homebrew (macos) or linuxbrew — required for anything on the brew path.
+    if want brew-core; then
+        if ! command -v brew &> /dev/null; then
+            echo "Installing Homebrew..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-        # Add brew to PATH for this script
-        if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            # Add brew to PATH for this script
+            if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+                eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            fi
         fi
-    fi
 
-    # Core tools (always installed)
-    echo "Installing core tools..."
-    brew install git neovim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
+        # Core tools (always installed on the brew path)
+        echo "Installing core tools..."
+        brew install git neovim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
 
-    # Set zsh as default shell
-    if [[ "$SHELL" != *"zsh"* ]]; then
-        echo "Setting zsh as default shell..."
-        ZSH_PATH=$(which zsh)
-        if ! grep -q "$ZSH_PATH" /etc/shells; then
-            echo "$ZSH_PATH" | sudo tee -a /etc/shells
+        # Set zsh as default shell
+        if [[ "$SHELL" != *"zsh"* ]]; then
+            echo "Setting zsh as default shell..."
+            ZSH_PATH=$(which zsh)
+            if ! grep -q "$ZSH_PATH" /etc/shells; then
+                echo "$ZSH_PATH" | sudo tee -a /etc/shells
+            fi
+            sudo chsh -s "$ZSH_PATH" "$USER"
         fi
-        sudo chsh -s "$ZSH_PATH" "$USER"
     fi
 
     # Bun
-    if ! command -v bun &> /dev/null; then
+    if want bun && ! command -v bun &> /dev/null; then
         echo "Installing Bun..."
         curl -fsSL https://bun.sh/install | bash
     fi
 
     # uv (fast python package manager)
-    if ! command -v uv &> /dev/null; then
+    if want uv && ! command -v uv &> /dev/null; then
         echo "Installing uv..."
         curl -LsSf https://astral.sh/uv/install.sh | sh
     fi
 fi
 
-# Heavy neovim dependencies (skip in minimal mode)
-if ! $MINIMAL; then
+# Heavy neovim dependencies (skip in preset minimal mode; brew path only)
+if ! $SLIM && want imagemagick && heavy_ok; then
     brew install imagemagick
 fi
 
-# Desktop apps (skip in minimal mode)
-if ! $MINIMAL; then
+# Desktop apps (skip in preset minimal mode; brew path only)
+if ! $SLIM && heavy_ok; then
     # Docker
-    if ! command -v docker &> /dev/null; then
+    if want docker && ! command -v docker &> /dev/null; then
         echo "Installing Docker..."
         if [[ "$OS" == "macos" ]]; then
             brew install --cask docker
@@ -200,7 +263,7 @@ if ! $MINIMAL; then
     fi
 
     # Zed
-    if ! command -v zed &> /dev/null; then
+    if want zed && ! command -v zed &> /dev/null; then
         echo "Installing Zed..."
         if [[ "$OS" == "macos" ]]; then
             brew install --cask zed
@@ -210,7 +273,7 @@ if ! $MINIMAL; then
     fi
 
     # Ghostty
-    if ! command -v ghostty &> /dev/null; then
+    if want ghostty && ! command -v ghostty &> /dev/null; then
         echo "Installing Ghostty..."
         if [[ "$OS" == "macos" ]]; then
             brew install --cask ghostty
@@ -228,51 +291,57 @@ if ! $MINIMAL; then
     fi
 
     # Tailscale
-    if ! command -v tailscale &> /dev/null; then
+    if want tailscale && ! command -v tailscale &> /dev/null; then
         echo "Installing Tailscale..."
         curl -fsSL https://tailscale.com/install.sh | sh
     fi
 
     # Rust/Cargo
-    if ! command -v cargo &> /dev/null; then
+    if want rust && ! command -v cargo &> /dev/null; then
         echo "Installing Rust..."
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     fi
 fi
 
 # mise for version management (replaces asdf)
-if ! command -v mise &>/dev/null && [ ! -x "$HOME/.local/bin/mise" ]; then
+if want mise && ! command -v mise &>/dev/null && [ ! -x "$HOME/.local/bin/mise" ]; then
     echo "Installing mise..."
     curl -fsSL https://mise.run | sh
 fi
 
 # zinit (zsh plugin manager)
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-if [ ! -d "$ZINIT_HOME" ]; then
-    echo "Installing zinit..."
-    mkdir -p "$(dirname $ZINIT_HOME)"
-    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+if want zinit; then
+    ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+    if [ ! -d "$ZINIT_HOME" ]; then
+        echo "Installing zinit..."
+        mkdir -p "$(dirname $ZINIT_HOME)"
+        git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+    fi
 fi
 
 # Link all configs. Extracted to scripts/link.sh so a machine that only needs a
 # refresh (no tool installs) can run that directly: scripts/link.sh [--minimal] [components...]
-LINK_ARGS=()
-$MINIMAL && LINK_ARGS+=(--minimal)
-MINIMAL=$MINIMAL "$DOTFILES/scripts/link.sh" "${LINK_ARGS[@]}"
+if want link; then
+    LINK_ARGS=()
+    $MINIMAL && LINK_ARGS+=(--minimal)
+    MINIMAL=$MINIMAL "$DOTFILES/scripts/link.sh" "${LINK_ARGS[@]}"
+fi
 
 # Cursor config (template - needs manual setup)
-if ! $MINIMAL; then
+if ! $MINIMAL && ! custom_mode; then
     echo "Cursor MCP template at $DOTFILES/cursor/mcp.json.template"
     echo "Copy to ~/.cursor/mcp.json and fill in API keys"
 fi
 
 # Node.js via mise (optional)
-MISE_BIN="$(command -v mise || true)"
-[ -z "$MISE_BIN" ] && [ -x "$HOME/.local/bin/mise" ] && MISE_BIN="$HOME/.local/bin/mise"
-if [ -n "$MISE_BIN" ]; then
-    if ! "$MISE_BIN" ls node 2>/dev/null | grep -q .; then
-        echo "Installing Node.js via mise..."
-        "$MISE_BIN" use -g node@lts
+if want node; then
+    MISE_BIN="$(command -v mise || true)"
+    [ -z "$MISE_BIN" ] && [ -x "$HOME/.local/bin/mise" ] && MISE_BIN="$HOME/.local/bin/mise"
+    if [ -n "$MISE_BIN" ]; then
+        if ! "$MISE_BIN" ls node 2>/dev/null | grep -q .; then
+            echo "Installing Node.js via mise..."
+            "$MISE_BIN" use -g node@lts
+        fi
     fi
 fi
 
@@ -281,6 +350,6 @@ echo "Done! Next steps:"
 echo "1. Source zshrc: source ~/.zshrc"
 echo "2. Edit ~/.zshrc.local with secrets"
 echo "3. Run :Lazy in nvim to install plugins"
-if ! $MINIMAL; then
+if ! $MINIMAL && ! custom_mode; then
     echo "4. Start tailscale: sudo tailscale up"
 fi
