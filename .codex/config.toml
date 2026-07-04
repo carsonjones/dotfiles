@@ -94,5 +94,9 @@ trusted_hash = "sha256:db34ab5f728203e3785eae0f125997b93779774fea0815d19fbdcd92f
 [hooks.state."/Users/jones/.codex/config.toml:stop:0:0"]
 trusted_hash = "sha256:6d13209243093303d029f6fe07cb21299670fdf18e1eee4a0957e69b49457b6d"
 
+[hooks.state."/Users/jones/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:f421eecc4c1118093624e9bce01d927deb924104e61115810b7cf5124b2137cf"
+enabled = true
+
 [features]
 hooks = true

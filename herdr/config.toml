@@ -49,6 +49,15 @@ type = "plugin_action"
 command = "local.tiles.v-even"
 description = "tile: vertical revert, even 50/50"
 
+# agents plugin (~/src/agents, linked via `herdr plugin link`): prefix+a
+# launches the live agents dashboard, or jumps to its tab if already running
+# (relaunches in place if you'd quit it). Idempotent — never stacks dashboards.
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "local.agents.toggle"
+description = "agents: launch / jump to the dashboard"
+
 [theme]
 name = "one-dark"
 

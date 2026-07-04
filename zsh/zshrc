@@ -587,5 +587,9 @@ command -v mise &>/dev/null && eval "$(mise activate zsh)"
 [ -d "$HOME/.safe-chain/bin" ] && export PATH="$HOME/.safe-chain/bin:$PATH"
 
 # herdr — running AI agents (live OpenTUI dashboard, diff-rendered, arrow-key focus).
-alias agents='bun ~/src/dotfiles/tools/herdr-agents.tsx'
-alias agentsw='bun ~/src/dotfiles/tools/herdr-agents.tsx'
+# Lives in its own repo (~/src/agents); also a herdr plugin bound to prefix+a.
+alias agents='bun ~/src/agents/herdr-agents.tsx'
+alias agentsw='bun ~/src/agents/herdr-agents.tsx --interval 1000'
+
+# mermaid — render clipboard contents as a diagram in the local preview server.
+alias mmd='~/src/dotfiles/tools/mermaid/bin/view-clipboard'
