@@ -21,7 +21,21 @@ import (
 
 // keep in sync with scripts/install.sh
 var brewComponents = []component{
-	{"brew-core", "Homebrew + core CLI (git, nvim, fzf, rg, fd, bat, gh, tmux, zellij, zsh, lazygit, sqlite3)"},
+	{"brew", "Homebrew itself (required for any brew formula below)"},
+	{"git", "git"},
+	{"nvim", "neovim"},
+	{"fzf", "fzf"},
+	{"ripgrep", "ripgrep (rg)"},
+	{"fd", "fd"},
+	{"bat", "bat"},
+	{"gh", "gh (GitHub CLI)"},
+	{"tmux", "tmux"},
+	{"zellij", "zellij"},
+	{"zsh", "zsh (and set as default shell)"},
+	{"lazygit", "lazygit"},
+	{"sqlite3", "sqlite"},
+	{"yazi", "yazi + ya"},
+	{"hunk", "hunk (terminal diff viewer)"},
 	{"imagemagick", "imagemagick (image.nvim dep)"},
 	{"docker", "Docker"},
 	{"zed", "Zed editor"},

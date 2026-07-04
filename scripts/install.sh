@@ -9,7 +9,7 @@ LIST_COMPONENTS=false
 
 # Components installed by each provisioning path. Keep in sync with
 # scripts/picker/main.go (the TUI hardcodes the same lists).
-BREW_COMPONENTS=(brew-core imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link)
+BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link)
 SLIM_COMPONENTS=(apt-core gh fzf nvim yazi hunk herdr bun uv mise zinit node link)
 
 usage() {
@@ -205,31 +205,42 @@ if $SLIM; then
         curl -LsSf https://astral.sh/uv/install.sh | sh || echo "[dotfiles] WARNING: uv install failed"
     fi
 else
-    # Install homebrew (macos) or linuxbrew — required for anything on the brew path.
-    if want brew-core; then
+    # Install homebrew (macos) or linuxbrew — required for any brew formula below.
+    if want brew; then
         if ! command -v brew &> /dev/null; then
             echo "Installing Homebrew..."
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-            # Add brew to PATH for this script
             if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
                 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             fi
         fi
+    fi
 
-        # Core tools (always installed on the brew path)
-        echo "Installing core tools..."
-        brew install git neovim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3
+    # Collect selected brew formulas and install in one shot.
+    # Component name → formula name (component name is what the picker/user sees).
+    declare -A BREW_ALIAS=(
+        [git]=git [nvim]=neovim [fzf]=fzf [ripgrep]=ripgrep [fd]=fd [bat]=bat
+        [gh]=gh [tmux]=tmux [zellij]=zellij [zsh]=zsh [lazygit]=lazygit
+        [sqlite3]=sqlite [yazi]=yazi [hunk]=hunk
+    )
+    to_install=()
+    for comp in git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk; do
+        want "$comp" && to_install+=("${BREW_ALIAS[$comp]}")
+    done
+    if [ ${#to_install[@]} -gt 0 ]; then
+        command -v brew &>/dev/null || { echo "error: brew not on PATH; include 'brew' in your selection or install Homebrew first" >&2; exit 1; }
+        echo "Installing brew formulas: ${to_install[*]}"
+        brew install "${to_install[@]}"
+    fi
 
-        # Set zsh as default shell
-        if [[ "$SHELL" != *"zsh"* ]]; then
-            echo "Setting zsh as default shell..."
-            ZSH_PATH=$(which zsh)
-            if ! grep -q "$ZSH_PATH" /etc/shells; then
-                echo "$ZSH_PATH" | sudo tee -a /etc/shells
-            fi
-            sudo chsh -s "$ZSH_PATH" "$USER"
+    # Set zsh as default shell (only when zsh was in the selection).
+    if want zsh && [[ "$SHELL" != *"zsh"* ]]; then
+        echo "Setting zsh as default shell..."
+        ZSH_PATH=$(command -v zsh)
+        if ! grep -q "$ZSH_PATH" /etc/shells; then
+            echo "$ZSH_PATH" | sudo tee -a /etc/shells
         fi
+        sudo chsh -s "$ZSH_PATH" "$USER"
     fi
 
     # Bun
