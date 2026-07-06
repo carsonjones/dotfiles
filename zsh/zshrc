@@ -279,6 +279,27 @@ htx() {
   (( print_only )) && { print -r -- "$file"; return 0; }
   ${EDITOR:-nvim} "$file"
 }
+# Hunk diff viewer: inline `c` notes live only in the daemon's memory and vanish
+# when the session closes. For review subcommands, drain them into the
+# comments.nvim queue on an interval while the TUI is live (see hunk-sync.py),
+# with a final sweep on exit. Non-review subcommands pass straight through.
+hunk() {
+  local sync=~/.agents/skills/comments/hunk-sync.py
+  case "$1" in
+    diff|show|stash|patch|difftool|pager)
+      if [[ -x "$sync" ]]; then
+        "$sync" watch >/dev/null 2>&1 &!
+        local watcher=$!
+        command hunk "$@"
+        local rc=$?
+        kill "$watcher" 2>/dev/null
+        "$sync" pull >/dev/null 2>&1
+        return $rc
+      fi
+      ;;
+  esac
+  command hunk "$@"
+}
 alias edit-config="nvim ~/.config"
 alias oc="opencode"
 alias :q="__smart_exit"

@@ -9,6 +9,8 @@ While reviewing files in nvim, the user presses `<leader>hc` to leave inline rev
 
 This is decoupled from any diff viewer: comments can land on **any line of any file** — committed, unchanged, or untracked. You just read the queue file.
 
+Notes left inside a live [Hunk](https://hunk.dev) diff session (`c` in the TUI) can be pulled into this same queue first, so nvim and Hunk notes flow through one path — see `hunk-sync.py` under Notes.
+
 ## Workflow
 
 ### 1. Read the queue
@@ -17,6 +19,12 @@ The plugin writes one JSONL file per repo at `~/.local/share/comments/<slug>.jso
 
 ```bash
 bash ~/.agents/skills/comments/comments.sh read
+```
+
+If the user reviewed this changeset in Hunk and wants those notes too, drain the live session's inline notes into the queue first, then read as usual:
+
+```bash
+~/.agents/skills/comments/hunk-sync.py        # no-op if no live Hunk session
 ```
 
 Each line is a JSON record:
@@ -63,3 +71,4 @@ If the user only wants to clear comments for one file, don't run `clear` (it wip
 - The plugin and this skill must agree on the slug rule (`/` → `%`) and the `~/.local/share/comments` directory. The capture side lives in `~/src/dotfiles/nvim/lua/comments.lua`.
 - Records are append-only; the same line may have multiple comments. Address them all.
 - `comments.py` is a standalone CLI for the user (run via `uv run`): `list` shows every queued comment across **all** repos, `rm <id>...` removes records by id (archiving the touched queue first), and bare `rm` opens an interactive picker. Separate from this skill's automated flow.
+- `hunk-sync.py` pulls inline notes from a live Hunk session (`hunk session comment list`) into this repo's queue. Non-destructive (notes stay in Hunk) and idempotent (re-runs skip already-imported notes via the source note id). `pull` imports once; `watch` drains on an interval until killed. `--dry-run` previews; `--type user|agent|ai|all` picks the source (default `user`). Records get `source: "hunk"` + `hunk_id` provenance fields, which the readers above ignore. Hunk keeps notes only in memory, so the `hunk()` zsh wrapper auto-runs `watch` during review sessions — nothing to remember.

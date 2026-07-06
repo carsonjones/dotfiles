@@ -3,6 +3,8 @@ node_modules/
 **/mcp.json
 !mcp.json.template
 .DS_Store
+__pycache__/
+*.pyc
 nvim/.nvimlog
 nvim/lazy-lock.json
 scripts/picker/dotfiles-picker
