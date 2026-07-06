@@ -152,7 +152,16 @@ link_agents() {
 link_claude() {
     echo "Linking claude config..."
     mkdir -p ~/.claude
-    ln -sf "$DOTFILES/claude/settings.json" ~/.claude/settings.json
+    # settings.json is generated: portable base deep-merged with an optional
+    # per-machine overlay (claude/settings.local.json, gitignored). Machine-specific
+    local base="$DOTFILES/claude/settings.json" local_overlay="$DOTFILES/claude/settings.local.json"
+    rm -f ~/.claude/settings.json   # clear stale target before regenerating
+    if [ -f "$local_overlay" ] && command -v jq >/dev/null 2>&1; then
+        jq -s '.[0] * .[1]' "$base" "$local_overlay" > ~/.claude/settings.json
+    else
+        [ -f "$local_overlay" ] && echo "  warning: jq missing, per-machine claude overlay not merged"
+        cp "$base" ~/.claude/settings.json
+    fi
     ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md
     ln -sf "$DOTFILES/claude/mcp_settings.json" ~/.claude/mcp_settings.json
     link_agent_skills "$HOME/.agents/skills"
@@ -316,7 +325,7 @@ unlink_agents() {
 
 unlink_claude() {
     echo "Unlinking claude config..."
-    rm_dot_symlink ~/.claude/settings.json
+    rm -f ~/.claude/settings.json   # generated file
     rm_dot_symlink ~/.claude/CLAUDE.md
     rm_dot_symlink ~/.claude/mcp_settings.json
     unlink_agent_skills "$HOME/.agents/skills"

@@ -1,4 +1,5 @@
 *.local
+claude/settings.local.json
 node_modules/
 **/mcp.json
 !mcp.json.template
