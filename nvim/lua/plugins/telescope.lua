@@ -52,20 +52,6 @@ return {
         desc = '[S]earch current [W]ord',
       },
       {
-        '<leader>sg',
-        function()
-          require('telescope.builtin').live_grep { cwd = vim.fn.getcwd() }
-        end,
-        desc = '[S]earch by [G]rep',
-      },
-      {
-        '<leader>sa',
-        function()
-          require('telescope.builtin').live_grep { cwd = vim.fn.getcwd(), file_ignore_patterns = {} }
-        end,
-        desc = '[S]earch [A]ll (no filters)',
-      },
-      {
         '<leader>sd',
         function()
           require('telescope.builtin').diagnostics { layout_config = { horizontal = { preview_width = 0.35 } } }
