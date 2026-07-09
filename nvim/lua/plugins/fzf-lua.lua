@@ -27,6 +27,29 @@ return {
       end,
       desc = '[S]earch [A]ll (no filters, fzf)',
     },
+    {
+      '<leader>sw',
+      function()
+        require('fzf-lua').grep_cword {
+          rg_opts = "--column --line-number --no-heading --color=always --smart-case --follow "
+            .. "-g '!*.stories.*' -g '!*.mock.*' -g '!*.mocks.*' -g '!__mocks__/*' -g '!mocks/*' "
+            .. "-g '!*.test.*' -g '!*.spec.*' -g '!__snapshots__/*' -g '!*.generated.*'",
+        }
+      end,
+      desc = '[S]earch current [W]ord (fzf)',
+    },
+    {
+      '<leader>sw',
+      function()
+        require('fzf-lua').grep_visual {
+          rg_opts = "--column --line-number --no-heading --color=always --smart-case --follow "
+            .. "-g '!*.stories.*' -g '!*.mock.*' -g '!*.mocks.*' -g '!__mocks__/*' -g '!mocks/*' "
+            .. "-g '!*.test.*' -g '!*.spec.*' -g '!__snapshots__/*' -g '!*.generated.*'",
+        }
+      end,
+      mode = 'x',
+      desc = '[S]earch selection (fzf)',
+    },
   },
   opts = {
     winopts = {

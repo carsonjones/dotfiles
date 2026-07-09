@@ -156,6 +156,9 @@ return {
           },
         },
         tailwindcss = {},
+        -- kotlin is set up via vim.lsp.config below; keep it here only so it
+        -- lands in ensure_installed (mason installs the server binary)
+        kotlin_language_server = {},
         lua_ls = {
           settings = {
             Lua = {
@@ -188,6 +191,19 @@ return {
         },
       })
       vim.lsp.enable 'vtsls'
+
+      -- mason-lspconfig 2.x ignores the `handlers` block below (auto_enable only),
+      -- so kotlin must be configured directly. lspconfig's default sets
+      -- init_options.storagePath = vim.fs.root(...), which is nil when no
+      -- gradle/maven marker is found — an empty table that serializes to JSON `[]`
+      -- and crashes the server's gson parser. Pin a concrete cache dir instead.
+      vim.lsp.config('kotlin_language_server', {
+        capabilities = capabilities,
+        init_options = {
+          storagePath = vim.fn.stdpath 'cache' .. '/kotlin-language-server',
+        },
+      })
+      vim.lsp.enable 'kotlin_language_server'
 
       require('mason').setup()
 

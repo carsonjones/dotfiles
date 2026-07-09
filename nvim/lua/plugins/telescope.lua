@@ -45,13 +45,6 @@ return {
         desc = '[S]earch [S]elect Telescope',
       },
       {
-        '<leader>sw',
-        function()
-          require('telescope.builtin').grep_string()
-        end,
-        desc = '[S]earch current [W]ord',
-      },
-      {
         '<leader>sd',
         function()
           require('telescope.builtin').diagnostics { layout_config = { horizontal = { preview_width = 0.35 } } }
