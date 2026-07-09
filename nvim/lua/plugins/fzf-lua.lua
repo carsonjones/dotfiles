@@ -33,5 +33,14 @@ return {
       height = 0.7,
       preview = { layout = 'vertical', vertical = 'down:55%' },
     },
+    -- Persist query history so <S-Up>/<S-Down> recall prior searches, like
+    -- telescope's cycle_history_prev/next.
+    fzf_opts = { ['--history'] = vim.fn.stdpath 'data' .. '/fzf-lua-history' },
+    keymap = {
+      fzf = {
+        ['shift-up'] = 'prev-history',
+        ['shift-down'] = 'next-history',
+      },
+    },
   },
 }
