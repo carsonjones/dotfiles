@@ -49,6 +49,14 @@ type = "plugin_action"
 command = "local.tiles.v-even"
 description = "tile: vertical revert, even 50/50"
 
+# single-space plugin (herdr/plugins/single-space): prefix+shift+s collects
+# every pane from other workspaces into the current one, each as a new tab.
+[[keys.command]]
+key = "prefix+shift+s"
+type = "plugin_action"
+command = "local.single_space.collect"
+description = "single-space: collect all panes into current space"
+
 # agents plugin (~/src/agents, linked via `herdr plugin link`): prefix+a
 # launches the live agents dashboard, or jumps to its tab if already running
 # (relaunches in place if you'd quit it). Idempotent — never stacks dashboards.
