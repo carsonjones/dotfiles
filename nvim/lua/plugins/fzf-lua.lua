@@ -50,6 +50,20 @@ return {
       mode = 'x',
       desc = '[S]earch selection (fzf)',
     },
+    {
+      '<leader>s*',
+      function()
+        require('fzf-lua').grep_curbuf { search = vim.fn.expand '<cword>' }
+      end,
+      desc = '[S]earch current word in file (fzf)',
+    },
+    {
+      '<leader>sh',
+      function()
+        require('fzf-lua').grep_curbuf { search = vim.fn.expand '<cword>' }
+      end,
+      desc = '[S]earch [H]ere (current word in file, fzf)',
+    },
   },
   opts = {
     winopts = {

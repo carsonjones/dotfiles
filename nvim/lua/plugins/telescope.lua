@@ -17,11 +17,11 @@ return {
     },
     keys = {
       {
-        '<leader>sh',
+        '<leader>s?',
         function()
           require('telescope.builtin').help_tags()
         end,
-        desc = '[S]earch [H]elp',
+        desc = '[S]earch Help',
       },
       {
         '<leader>sk',
