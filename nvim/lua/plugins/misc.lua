@@ -58,6 +58,14 @@ return {
         desc = 'Harpoon menu',
       },
       {
+        '<leader>e',
+        function()
+          local h = require 'harpoon'
+          h.ui:toggle_quick_menu(h:list())
+        end,
+        desc = 'Harpoon menu',
+      },
+      {
         '<leader>1',
         function()
           require('harpoon'):list():select(1)
