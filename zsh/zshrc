@@ -362,6 +362,19 @@ gfco() {
   git merge --ff-only "origin/$branch"
 }
 
+## search branches (local + remote) with fzf (overrides OMZ `gb` alias)
+unalias gb 2>/dev/null
+gb() {
+  local branch
+  branch=$(git branch -a --format='%(refname:short)' \
+    | sed 's#^origin/##' | sort -u \
+    | fzf --preview 'git log {} --oneline --graph --color=always -n 10' \
+          --header 'Checkout Branch' \
+          --query "$*" \
+          --height 50% --layout=reverse --border) || return
+  [[ -n "$branch" ]] && git checkout "$branch"
+}
+
 ## Python
 alias python2=python2
 
@@ -612,8 +625,8 @@ command -v mise &>/dev/null && eval "$(mise activate zsh)"
 
 # herdr — running AI agents (live OpenTUI dashboard, diff-rendered, arrow-key focus).
 # Lives in its own repo (~/src/agents); also a herdr plugin bound to prefix+a.
-alias agents='bun ~/src/agents/herdr-agents.tsx'
-alias agentsw='bun ~/src/agents/herdr-agents.tsx --interval 1000'
+alias agents='bun ~/src/herdr-agent-dashboard/herdr-agents.tsx'
+alias agentsw='bun ~/src/herdr-agent-dashboard//herdr-agents.tsx --interval 1000'
 
 # mermaid — render clipboard contents as a diagram in the local preview server.
 alias mmd='~/src/dotfiles/tools/mermaid/bin/view-clipboard'
