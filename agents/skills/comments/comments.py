@@ -11,6 +11,7 @@ matching comments.lua / comments.sh).
   comments.py [list]        list every queued comment, grouped by repo
   comments.py rm <id>...    remove records by id (archives the touched queues first)
   comments.py rm            interactive picker (archives before removing)
+  comments.py clear         archive then empty every queue, across all repos
   comments.py path          print the comments dir
 
 Stdlib only; runs via `uv run` (or any python3).
@@ -34,6 +35,7 @@ usage:
   comments [list]        list every queued comment, grouped by repo (default)
   comments rm <id>...    remove records by id; archives the touched queue first
   comments rm            interactive picker — pick by index or id
+  comments clear         archive then empty every queue, across all repos
   comments path          print the comments dir
   comments -h, --help    show this help
 
@@ -180,6 +182,26 @@ def remove_ids(ids: set[str]) -> int:
     return 0
 
 
+def cmd_clear() -> int:
+    """Archive then truncate every non-empty queue. Recoverable from archive/."""
+    cleared = 0
+    total = 0
+    for f in queue_files():
+        recs = load(f)
+        if not recs:
+            continue
+        dest = archive(f)
+        f.write_text("")
+        cleared += 1
+        total += len(recs)
+        print(f"{bold(repo_of(f))} {dim(f'({len(recs)})')} archived -> {dim(str(dest))}")
+    if not cleared:
+        print(dim("(no comments queued)"))
+        return 0
+    print(f"\ncleared {total} comment(s) across {cleared} repo(s)")
+    return 0
+
+
 def cmd_rm(argv: list[str]) -> int:
     if argv:
         return remove_ids(set(argv))
@@ -224,6 +246,8 @@ def main(argv: list[str]) -> int:
         return cmd_list()
     if cmd == "rm":
         return cmd_rm(rest)
+    if cmd == "clear":
+        return cmd_clear()
     if cmd == "path":
         print(DIR)
         return 0
