@@ -288,12 +288,15 @@ hunk() {
   case "$1" in
     diff|show|stash|patch|difftool|pager)
       if [[ -x "$sync" ]]; then
-        "$sync" watch >/dev/null 2>&1 &!
+        # --clear = receiving agent archives addressed comments when done;
+        # drop it from dflags to keep the queue until cleared by hand
+        local -a dflags=(--dispatch --clear)
+        "$sync" watch $dflags >/dev/null 2>&1 &!
         local watcher=$!
         command hunk "$@"
         local rc=$?
         kill "$watcher" 2>/dev/null
-        "$sync" pull >/dev/null 2>&1
+        "$sync" pull $dflags >/dev/null 2>&1
         return $rc
       fi
       ;;

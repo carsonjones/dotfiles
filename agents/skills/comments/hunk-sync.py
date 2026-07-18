@@ -13,6 +13,8 @@ so the `/comments` skill consumes nvim and Hunk notes through one path.
   hunk-sync.py [pull]     import live Hunk user notes into this repo's queue
   hunk-sync.py watch      drain this repo's live notes on an interval until killed
   hunk-sync.py --dry-run  show what would be imported without writing
+  hunk-sync.py --dispatch also fire "/comments" in an idle sibling herdr agent
+                          pane after importing (user-side wrapper only)
   hunk-sync.py path       print this repo's queue file path
 
 Non-destructive: notes are copied, not removed from the session. Re-runs are
@@ -27,6 +29,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import os
 import random
 import subprocess
 import sys
@@ -34,6 +37,7 @@ import time
 from pathlib import Path
 
 DIR = Path.home() / ".local" / "share" / "comments"
+SKILL_DIR = Path(__file__).resolve().parent
 
 HELP = """\
 hunk-sync — pull live Hunk inline notes into the comments.nvim queue
@@ -44,6 +48,11 @@ usage:
   hunk-sync --dry-run    preview the mapping; write nothing
   hunk-sync --type <t>   source note type: user (default), agent, ai, all
   hunk-sync --interval N poll seconds for `watch` (default 2)
+  hunk-sync --dispatch   after importing, fire "/comments" in an idle agent pane
+                         in the same herdr tab (comments.sh dispatch); user-side
+                         only -- agent-invoked pulls must NOT pass this
+  hunk-sync --clear      with --dispatch: ask the receiving agent to archive and
+                         clear the addressed comments when it finishes
   hunk-sync path         print this repo's queue file path
   hunk-sync -h, --help   show this help
 
@@ -231,7 +240,33 @@ def _append(root: str, fresh: list[dict]) -> None:
             f.write(json.dumps(r) + "\n")
 
 
-def cmd_pull(note_type: str, dry_run: bool) -> int:
+def dispatch(rels: list[str], clear: bool = False) -> None:
+    """Fire "/comments [rel]" in an idle agent pane in the same herdr tab via
+    `comments.sh dispatch`. One file scopes the command to it, several fall back
+    to the whole queue. All herdr/neighbor guards live in the script; every
+    failure here is silent -- dispatch is best-effort sugar, never an error."""
+    if not os.environ.get("HERDR_PANE_ID"):
+        return
+    script = SKILL_DIR / "comments.sh"
+    if not script.is_file():
+        return
+    args = ["bash", str(script), "dispatch"]
+    uniq = sorted(set(rels))
+    if len(uniq) == 1:
+        args.append(uniq[0])
+    if clear:
+        args.append("--clear")
+    try:
+        out = subprocess.run(args, capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.TimeoutExpired):
+        return
+    sent = (out.stdout or "").strip()
+    if out.returncode == 0 and sent:
+        print(f"/comments fired in {sent}", file=sys.stderr)
+
+
+def cmd_pull(note_type: str, dry_run: bool, do_dispatch: bool = False,
+             do_clear: bool = False) -> int:
     root = repo_root()
     collected = _collect_new(root, note_type)
     if collected is None:
@@ -256,29 +291,42 @@ def cmd_pull(note_type: str, dry_run: bool) -> int:
     _append(root, fresh)
     print(f"imported {len(fresh)} Hunk note(s) into {qpath}")
     print("run /comments (or `comments.py list`) to work through them")
+    if do_dispatch:
+        dispatch([r["rel"] for r in fresh], do_clear)
     return 0
 
 
-def cmd_watch(note_type: str, interval: float) -> int:
+def cmd_watch(note_type: str, interval: float, do_dispatch: bool = False,
+              do_clear: bool = False) -> int:
     """Drain this repo's live notes every `interval` secs until interrupted.
     Meant to run alongside a Hunk session (notes are memory-only, so continuous
-    draining is what survives closing the TUI)."""
+    draining is what survives closing the TUI).
+
+    With --dispatch, imported notes are handed to a sibling agent pane once a
+    poll cycle finds nothing new (= the burst of notes has settled)."""
     root = repo_root()
     print(f"watching Hunk notes for {root} every {interval}s (ctrl-c to stop)",
           file=sys.stderr)
     total = 0
+    pending: list[str] = []
     try:
         while True:
             collected = _collect_new(root, note_type)
-            if collected:
-                fresh, _mapped, _unmapped = collected
-                if fresh:
-                    _append(root, fresh)
-                    total += len(fresh)
-                    print(f"+{len(fresh)} note(s) -> queue ({total} total)",
-                          file=sys.stderr)
+            fresh = collected[0] if collected else []
+            if fresh:
+                _append(root, fresh)
+                total += len(fresh)
+                print(f"+{len(fresh)} note(s) -> queue ({total} total)",
+                      file=sys.stderr)
+                if do_dispatch:
+                    pending += [r["rel"] for r in fresh]
+            elif pending:
+                dispatch(pending, do_clear)
+                pending = []
             time.sleep(interval)
     except KeyboardInterrupt:
+        if pending:
+            dispatch(pending, do_clear)
         print(f"\nstopped; imported {total} note(s) this run", file=sys.stderr)
     return 0
 
@@ -286,6 +334,8 @@ def cmd_watch(note_type: str, interval: float) -> int:
 def main(argv: list[str]) -> int:
     note_type = "user"
     dry_run = False
+    do_dispatch = False
+    do_clear = False
     interval = 2.0
     rest = []
     i = 0
@@ -296,6 +346,10 @@ def main(argv: list[str]) -> int:
             return 0
         if a == "--dry-run":
             dry_run = True
+        elif a == "--dispatch":
+            do_dispatch = True
+        elif a == "--clear":
+            do_clear = True
         elif a == "--type":
             i += 1
             if i >= len(argv):
@@ -318,9 +372,9 @@ def main(argv: list[str]) -> int:
         print(queue_path(repo_root()))
         return 0
     if cmd == "pull":
-        return cmd_pull(note_type, dry_run)
+        return cmd_pull(note_type, dry_run, do_dispatch, do_clear)
     if cmd == "watch":
-        return cmd_watch(note_type, interval)
+        return cmd_watch(note_type, interval, do_dispatch, do_clear)
     print(f"unknown command: {cmd}\n", file=sys.stderr)
     print(HELP, file=sys.stderr)
     return 2

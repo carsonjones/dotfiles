@@ -16,6 +16,11 @@
 --
 -- Queue:   ~/.local/share/comments/<repo-slug>.jsonl   (one record per line)
 -- Read by: the `/comments` Claude Code skill.
+--
+-- When nvim runs inside a herdr pane and an idle agent (claude/codex/...) sits
+-- in another pane of the same tab, queuing a comment auto-fires "/comments" in
+-- that pane (debounced; see `comments.sh dispatch`). No herdr / no neighbor /
+-- busy agent = silent no-op.
 
 local M = {}
 
@@ -29,6 +34,17 @@ M.config = {
   -- Above gitsigns (default 6) so the comment dot stays visible on changed
   -- lines. Widen with `signcolumn = "auto:2"` to see both at once.
   sign_priority = 20,
+  -- After a comment is queued, auto-fire "/comments" in an idle agent pane in
+  -- the same herdr tab (comments.sh dispatch). Debounced so a burst of notes
+  -- fires once; silent no-op outside herdr or with no idle agent neighbor.
+  dispatch = {
+    enabled = true,
+    debounce_ms = 5000,
+    -- clear = ask the receiving agent to archive+clear the addressed comments
+    -- when it finishes; false keeps the queue until cleared by hand
+    clear = true,
+    script = "~/.agents/skills/comments/comments.sh",
+  },
 }
 
 local ns = vim.api.nvim_create_namespace("comments")
@@ -159,6 +175,36 @@ local function random_id()
   return id
 end
 
+-- Debounced hand-off to comments.sh dispatch. Collects the files touched in a
+-- burst of comments; a single file scopes the /comments command to it, several
+-- fall back to the whole queue. All herdr/neighbor guards live in the script.
+local dispatch_timer
+local pending_rels = {}
+
+local function schedule_dispatch(rel)
+  local cfg = M.config.dispatch
+  if not cfg.enabled or not vim.env.HERDR_PANE_ID then return end
+  local script = vim.fn.expand(cfg.script)
+  if vim.fn.filereadable(script) ~= 1 then return end
+
+  pending_rels[rel] = true
+  dispatch_timer = dispatch_timer or vim.uv.new_timer()
+  dispatch_timer:stop()
+  dispatch_timer:start(cfg.debounce_ms, 0, vim.schedule_wrap(function()
+    local rels = vim.tbl_keys(pending_rels)
+    pending_rels = {}
+    local args = { "bash", script, "dispatch" }
+    if #rels == 1 then args[#args + 1] = rels[1] end
+    if cfg.clear then args[#args + 1] = "--clear" end
+    vim.system(args, { text = true }, function(out)
+      local sent = out.code == 0 and vim.trim(out.stdout or "") or ""
+      if sent ~= "" then
+        vim.schedule(function() notify("/comments fired in " .. sent) end)
+      end
+    end)
+  end))
+end
+
 local function send(start_line, end_line, body)
   local abspath = vim.fn.expand("%:p")
   if abspath == "" then
@@ -200,6 +246,8 @@ local function send(start_line, end_line, body)
     where = where .. "-" .. end_line
   end
   notify("comment queued (" .. where .. ")")
+
+  schedule_dispatch(rel)
 end
 
 local function prompt(start_line, end_line)

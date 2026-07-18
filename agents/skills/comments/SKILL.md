@@ -58,7 +58,9 @@ Batch related edits, but keep the user in the loop on anything non-obvious or ha
 
 ### 3. Archive for a fresh slate — only when told
 
-Do **not** clear the queue automatically. After the user confirms the work is done and asks to clear / reset / "fresh slate", archive the file (recoverable) then truncate it:
+Do **not** clear the queue automatically — with one exception: `--clear` in `$ARGUMENTS` (the auto-dispatch pipeline passes it) is standing permission to archive+clear the comments you addressed, once you've finished addressing them. Scope it: with a file argument, clear only that file's records (archive a copy, then `jq`-rewrite the queue keeping other files); with no file, run the full `clear` below. Keep any records you deferred or still need the user's input on.
+
+Otherwise, wait until the user confirms the work is done and asks to clear / reset / "fresh slate", then archive the file (recoverable) and truncate it:
 
 ```bash
 bash ~/.agents/skills/comments/comments.sh clear
@@ -69,6 +71,7 @@ If the user only wants to clear comments for one file, don't run `clear` (it wip
 ## Notes
 
 - The plugin and this skill must agree on the slug rule (`/` → `%`) and the `~/.local/share/comments` directory. The capture side lives in `~/src/dotfiles/nvim/lua/comments.lua`.
+- **Auto-dispatch**: comments queued from inside a herdr pane fire `comments.sh dispatch [rel]` (debounced), which sends `/comments [rel] [--clear]` to the first **idle** agent pane in the same herdr tab. Both capture paths do this: nvim `<leader>hc` (comments.lua) and the `hunk()` zsh wrapper (`hunk-sync.py watch/pull --dispatch`). So this skill may be invoked without the user typing anything — treat it like a normal `/comments` run scoped to `$ARGUMENTS`. Not-in-herdr, no agent neighbor, or busy agent all no-op silently. Agent-invoked `hunk-sync.py pull` must **not** pass `--dispatch` — that flag is for the user-side wrapper only.
 - Records are append-only; the same line may have multiple comments. Address them all.
 - `comments.py` is a standalone CLI for the user (run via `uv run`): `list` shows every queued comment across **all** repos, `rm <id>...` removes records by id (archiving the touched queue first), and bare `rm` opens an interactive picker. Separate from this skill's automated flow.
 - `hunk-sync.py` pulls inline notes from a live Hunk session (`hunk session comment list`) into this repo's queue. Non-destructive (notes stay in Hunk) and idempotent (re-runs skip already-imported notes via the source note id). `pull` imports once; `watch` drains on an interval until killed. `--dry-run` previews; `--type user|agent|ai|all` picks the source (default `user`). Records get `source: "hunk"` + `hunk_id` provenance fields, which the readers above ignore. Hunk keeps notes only in memory, so the `hunk()` zsh wrapper auto-runs `watch` during review sessions — nothing to remember.
