@@ -29,6 +29,7 @@ var brewComponents = []component{
 	{"zinit", "zinit (zsh plugin manager)"},
 	{"node", "Node.js LTS via mise"},
 	{"link", "symlink dotfile configs (scripts/link.sh)"},
+	{"herdr-plugins", "herdr external plugins (picker-plus, herdr-plus, command-palette, agent-dashboard)"},
 }
 
 var slimComponents = []component{

@@ -18,7 +18,7 @@ FORCE_SHELL=false
 LIST_COMPONENTS=false
 
 # Keep in sync with scripts/install.sh and scripts/picker/main.go.
-BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link)
+BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link herdr-plugins)
 SLIM_COMPONENTS=(apt-core gh fzf nvim yazi hunk herdr bun uv mise zinit node link)
 
 usage() {
@@ -233,6 +233,24 @@ remove_link() {
     "$DOTFILES/scripts/link.sh" --unlink
 }
 
+remove_herdr_plugins() {
+    if ! command -v herdr >/dev/null 2>&1; then
+        warn "herdr not on PATH; skipping plugin uninstalls"
+        return
+    fi
+    # Keep in sync with HERDR_PLUGINS in install.sh.
+    local repo
+    for repo in cloudmanic/herdr-plus thanhdat77/herdr-picker-plus \
+                JanTvrdik/herdr-command-palette carsonjones/herdr-agent-dashboard; do
+        herdr plugin uninstall "$repo" 2>/dev/null || warn "herdr plugin uninstall $repo failed (may not be installed)"
+    done
+    # Keep in sync with HERDR_LOCAL_PLUGINS in install.sh.
+    local name
+    for name in tiles; do
+        herdr plugin unlink "local.$name" 2>/dev/null || warn "herdr plugin unlink local.$name failed (may not be linked)"
+    done
+}
+
 # slim-path binary removers (files in ~/.local/bin)
 remove_bin() { rm -f "$HOME/.local/bin/$1"; }
 
@@ -264,6 +282,7 @@ dispatch_brew() {
         zinit) remove_zinit ;;
         node)  remove_node ;;
         link)  remove_link ;;
+        herdr-plugins) remove_herdr_plugins ;;
         git|nvim|fzf|ripgrep|fd|bat|gh|tmux|zellij|lazygit|sqlite3|yazi|hunk|imagemagick)
             remove_brew_formula "$c" ;;
         *) warn "unknown brew-path component: $c" ;;

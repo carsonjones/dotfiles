@@ -92,6 +92,7 @@ link_herdr() {
     echo "Linking herdr config..."
     mkdir -p ~/.config/herdr
     ln -sfn "$DOTFILES/herdr/config.toml" ~/.config/herdr/config.toml
+    ln -sfn "$DOTFILES/herdr/plugins" ~/.config/herdr/plugins
 }
 
 link_comview() {
@@ -284,6 +285,7 @@ unlink_zellij() {
 unlink_herdr() {
     echo "Unlinking herdr config..."
     rm_dot_symlink ~/.config/herdr/config.toml
+    rm_dot_dir_symlink ~/.config/herdr/plugins
 }
 
 unlink_comview() {

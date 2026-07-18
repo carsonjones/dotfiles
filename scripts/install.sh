@@ -9,7 +9,7 @@ LIST_COMPONENTS=false
 
 # Components installed by each provisioning path. Keep in sync with
 # scripts/picker/main.go (the TUI hardcodes the same lists).
-BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link)
+BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link herdr-plugins)
 SLIM_COMPONENTS=(apt-core gh fzf nvim yazi hunk herdr bun uv mise zinit node link)
 
 usage() {
@@ -336,6 +336,44 @@ if want link; then
     LINK_ARGS=()
     $MINIMAL && LINK_ARGS+=(--minimal)
     MINIMAL=$MINIMAL "$DOTFILES/scripts/link.sh" "${LINK_ARGS[@]}"
+fi
+
+# herdr external plugins — pulled from GitHub via herdr's own plugin manager into
+# $DOTFILES/herdr/plugins/github (tracked once installed). Runs after the link
+# step above since it needs ~/.config/herdr/plugins symlinked into the repo first.
+HERDR_PLUGINS=(
+    cloudmanic/herdr-plus
+    thanhdat77/herdr-picker-plus
+    JanTvrdik/herdr-command-palette
+    carsonjones/herdr-agent-dashboard
+)
+if ! $SLIM && want herdr-plugins && command -v herdr &>/dev/null; then
+    have_herdr_plugin() {
+        local owner="${1%%/*}" repo="${1##*/}"
+        if command -v jq &>/dev/null; then
+            herdr plugin list --json 2>/dev/null | jq -e --arg o "$owner" --arg r "$repo" \
+                '.result.plugins[]?.source | select(.kind=="github" and .owner==$o and .repo==$r)' >/dev/null 2>&1
+        else
+            herdr plugin list --json 2>/dev/null | grep -q "\"owner\":\"$owner\",\"repo\":\"$repo\""
+        fi
+    }
+    for repo in "${HERDR_PLUGINS[@]}"; do
+        if have_herdr_plugin "$repo"; then
+            continue
+        fi
+        echo "Installing herdr plugin $repo..."
+        herdr plugin install "$repo" --yes || echo "[dotfiles] WARNING: herdr plugin install $repo failed"
+    done
+fi
+
+# herdr local plugins — linked straight from this repo, no external fetch.
+# `herdr plugin link` re-points the registration in place, so safe to re-run.
+HERDR_LOCAL_PLUGINS=(tiles)
+if want herdr-plugins && command -v herdr &>/dev/null; then
+    for name in "${HERDR_LOCAL_PLUGINS[@]}"; do
+        echo "Linking herdr plugin $name..."
+        herdr plugin link "$DOTFILES/herdr/plugins/$name" || echo "[dotfiles] WARNING: herdr plugin link $name failed"
+    done
 fi
 
 # Cursor config (template - needs manual setup)

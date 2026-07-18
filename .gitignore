@@ -9,3 +9,8 @@ __pycache__/
 nvim/.nvimlog
 nvim/lazy-lock.json
 scripts/picker/dotfiles-picker
+
+# herdr plugins fetched from GitHub — each is its own git repo (nested .git),
+# reproducible via `herdr plugin install` (see scripts/install.sh). Don't vendor.
+herdr/plugins/github/
+herdr/plugins/.tmp-install-*/
