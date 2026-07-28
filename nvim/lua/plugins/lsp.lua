@@ -155,7 +155,20 @@ return {
             },
           },
         },
-        tailwindcss = {},
+        tailwindcss = {
+          -- Monorepo (~/main): the default root_dir falls back to package.json/.git,
+          -- which roots the server at ~/main. From there it can't tie a file to its
+          -- nearest tailwind.config, guesses v4, rejects the project's v3 @tailwind
+          -- directives, and pops "No Tailwind CSS project". Anchor strictly on the
+          -- tailwind config so each sub-package gets its own correctly-rooted client;
+          -- files with no config nearby just don't attach (no popup).
+          root_dir = require('lspconfig.util').root_pattern(
+            'tailwind.config.ts',
+            'tailwind.config.js',
+            'tailwind.config.cjs',
+            'tailwind.config.mjs'
+          ),
+        },
         -- kotlin is set up via vim.lsp.config below; keep it here only so it
         -- lands in ensure_installed (mason installs the server binary)
         kotlin_language_server = {},

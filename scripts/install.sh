@@ -368,6 +368,24 @@ if ! $SLIM && want herdr-plugins && command -v herdr &>/dev/null; then
         echo "Installing herdr plugin $repo..."
         herdr plugin install "$repo" --yes || echo "[dotfiles] WARNING: herdr plugin install $repo failed"
     done
+
+    # termscope patch: its list_repo_files runs `fd --follow`, which chases
+    # symlinks out of large repos (~/main → 247k+ files) and blows the 5s
+    # timeout, so every picker stalls 5s and indexes nothing. Drop --follow —
+    # startup goes 5s→~50ms and the repo index actually populates. Managed
+    # github install, so re-patch after every install. Idempotent.
+    if have_herdr_plugin iurysza/termscope && command -v jq &>/dev/null; then
+        ts_root="$(herdr plugin list --json 2>/dev/null | jq -r '.result.plugins[]? | select(.source.repo=="termscope") | .plugin_root')"
+        ts_bin="$ts_root/termscope"
+        if [ -n "$ts_root" ] && grep -q '"--follow",' "$ts_bin" 2>/dev/null; then
+            echo "Patching termscope (drop fd --follow)..."
+            if [ "$OS" = "macos" ]; then
+                sed -i '' '/^[[:space:]]*"--follow",$/d' "$ts_bin" || echo "[dotfiles] WARNING: termscope patch failed"
+            else
+                sed -i '/^[[:space:]]*"--follow",$/d' "$ts_bin" || echo "[dotfiles] WARNING: termscope patch failed"
+            fi
+        fi
+    fi
 fi
 
 # herdr local plugins — linked straight from this repo, no external fetch.
