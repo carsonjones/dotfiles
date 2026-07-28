@@ -218,14 +218,17 @@ else
 
     # Collect selected brew formulas and install in one shot.
     # Component name → formula name (component name is what the picker/user sees).
-    declare -A BREW_ALIAS=(
-        [git]=git [nvim]=neovim [fzf]=fzf [ripgrep]=ripgrep [fd]=fd [bat]=bat
-        [gh]=gh [tmux]=tmux [zellij]=zellij [zsh]=zsh [lazygit]=lazygit
-        [sqlite3]=sqlite [yazi]=yazi [hunk]=hunk
-    )
+    # Plain case instead of `declare -A`: macOS ships bash 3.2 (no assoc arrays).
+    brew_alias() {
+        case "$1" in
+            nvim) echo neovim ;;
+            sqlite3) echo sqlite ;;
+            *) echo "$1" ;;
+        esac
+    }
     to_install=()
     for comp in git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk; do
-        want "$comp" && to_install+=("${BREW_ALIAS[$comp]}")
+        want "$comp" && to_install+=("$(brew_alias "$comp")")
     done
     if [ ${#to_install[@]} -gt 0 ]; then
         command -v brew &>/dev/null || { echo "error: brew not on PATH; include 'brew' in your selection or install Homebrew first" >&2; exit 1; }
@@ -346,6 +349,7 @@ HERDR_PLUGINS=(
     thanhdat77/herdr-picker-plus
     JanTvrdik/herdr-command-palette
     carsonjones/herdr-agent-dashboard
+    iurysza/termscope
 )
 if ! $SLIM && want herdr-plugins && command -v herdr &>/dev/null; then
     have_herdr_plugin() {

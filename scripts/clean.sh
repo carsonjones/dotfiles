@@ -241,7 +241,8 @@ remove_herdr_plugins() {
     # Keep in sync with HERDR_PLUGINS in install.sh.
     local repo
     for repo in cloudmanic/herdr-plus thanhdat77/herdr-picker-plus \
-                JanTvrdik/herdr-command-palette carsonjones/herdr-agent-dashboard; do
+                JanTvrdik/herdr-command-palette carsonjones/herdr-agent-dashboard \
+                iurysza/termscope; do
         herdr plugin uninstall "$repo" 2>/dev/null || warn "herdr plugin uninstall $repo failed (may not be installed)"
     done
     # Keep in sync with HERDR_LOCAL_PLUGINS in install.sh.
