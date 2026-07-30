@@ -247,8 +247,10 @@ return {
           -- (e.g. ~/main/scratch/*.md -> ~/src/cjones/...) show up in <leader>sf.
           -- Fall back to telescope's built-in finder if fd is missing so the
           -- picker doesn't error out with "Executable not found".
+          -- Exclude ~/main/code (a symlink to ~/src): with --follow, fd would
+          -- otherwise descend the entire src tree and make <leader>sf crawl.
           find_files = vim.fn.executable 'fd' == 1
-              and { find_command = { 'fd', '--type', 'f', '--follow', '--color', 'never' } }
+              and { find_command = { 'fd', '--type', 'f', '--follow', '--color', 'never', '--exclude', '**/main/code' } }
             or {},
           lsp_references = { fname_width = 60 },
           lsp_definitions = { fname_width = 60 },

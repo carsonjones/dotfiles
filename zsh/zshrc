@@ -517,6 +517,9 @@ PY
 
 alias serve='web'
 
+# Live-reload server for ~/main (explicit watch roots — skips the code/ symlink into ~/src)
+alias serve-main='npx live-server ~/main -l 3333 --watch=scratch,workbench,docs,data'
+
 getCurrentBranch() {
   local current_branch_name=$(git symbolic-ref -q HEAD)
   local current_branch_name=${current_branch_name##refs/heads/}
