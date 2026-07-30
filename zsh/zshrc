@@ -411,6 +411,24 @@ alias comments="uv run ~/src/dotfiles/agents/skills/comments/comments.py"
 CODEX="/Applications/Codex.app/Contents/Resources/codex"
 codex() { command "$CODEX" "$@"; } 
 
+rename-tab() {
+  if (( $# == 0 )); then
+    echo "Usage: herdr-rename <LABEL...>" >&2
+    return 2
+  fi
+
+  local tab_id
+  if ! tab_id=$(
+    herdr tab list |
+      jq -er 'first(.result.tabs[] | select(.focused) | .tab_id)'
+  ); then
+    echo "Could not find the focused herdr tab" >&2
+    return 1
+  fi
+
+  herdr tab rename "$tab_id" "$@"
+}
+
 ########################################
 # FUNCTIONS
 ########################################

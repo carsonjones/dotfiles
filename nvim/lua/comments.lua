@@ -9,7 +9,14 @@
 --
 --   normal mode  <leader>hc  -> comment on the current line
 --   visual mode  <leader>hc  -> comment on the selected range
+--   normal mode  <leader>hi  -> inspect/edit queued comments for the current file
 --   normal mode  <leader>hx  -> remove all queued comments for the current file
+--
+-- The inspect pane (<leader>hi) is a floating scratch buffer, one row per queued
+-- comment for the current file: "<id>  L<line>[-<end>]  <body>". Edit a body in
+-- place, change the L<line> to re-anchor, `dd` a row to delete that comment.
+-- Changes reconcile back into the queue when the pane closes (`q` / `<Esc>`).
+-- Keep the leading id intact -- it's how a row maps back to its record.
 --
 -- Lines with a queued comment get a subtle dot in the sign column, refreshed
 -- on buffer enter and whenever you add or clear a comment.
@@ -28,6 +35,7 @@ M.config = {
   dir = vim.fn.expand("~/.local/share/comments"),
   keys = {
     comment = "<leader>hc",
+    inspect = "<leader>hi",
     remove = "<leader>hx",
   },
   sign = "•",
@@ -165,6 +173,149 @@ function M.remove_file()
     #removed, #removed == 1 and "" or "s", vim.fn.expand("%:t")))
 end
 
+-- Inspect/edit pane -----------------------------------------------------------
+--
+-- A floating scratch buffer listing the current file's queued comments, one per
+-- row: "<id>  L<line>[-<end>]  <body>". Edit bodies, retarget lines, or `dd` a
+-- row to delete. On close the buffer is parsed back into the queue: rows keyed
+-- by their leading id update the matching record; missing ids (deleted rows) or
+-- rows with an empty body drop the record (archived first).
+
+M._inspect = nil
+
+local function fmt_row(rec)
+  local lspec = "L" .. rec.line
+  if rec.end_line and rec.end_line ~= rec.line then
+    lspec = lspec .. "-" .. rec.end_line
+  end
+  return string.format("%s  %s  %s", rec.id, lspec, rec.body or "")
+end
+
+-- Parse "<id>  L<line>[-<end>]  <body>" -> id, sline, eline, body (body trimmed).
+local function parse_row(line)
+  local id, lspec, body = line:match("^(%S+)%s+(L%S+)%s+(.*)$")
+  if not id then
+    id, lspec = line:match("^(%S+)%s+(L%S+)%s*$")
+    body = ""
+  end
+  if not id then return nil end
+  local a, b = lspec:match("^L(%d+)%-(%d+)$")
+  local s = lspec:match("^L(%d+)$")
+  local sline = tonumber(a or s)
+  if not sline then return nil end
+  local eline = tonumber(b) or sline
+  return id, sline, eline, vim.trim(body or "")
+end
+
+-- Read the inspect buffer and fold its edits back into the queue on disk.
+local function inspect_reconcile(st)
+  if not (st.buf and vim.api.nvim_buf_is_valid(st.buf)) then return end
+  local lines = vim.api.nvim_buf_get_lines(st.buf, 0, -1, false)
+
+  local by_id = {}
+  for _, rec in ipairs(st.records) do by_id[rec.id] = rec end
+
+  local seen, kept = {}, {}
+  for _, line in ipairs(lines) do
+    if vim.trim(line) ~= "" then
+      local id, sline, eline, body = parse_row(line)
+      local rec = id and by_id[id]
+      if rec and body ~= "" and not seen[id] then
+        seen[id] = true
+        rec.line = sline
+        rec.end_line = eline
+        rec.body = body
+        kept[#kept + 1] = rec
+      end
+    end
+  end
+
+  -- Records for this file that no longer survive -> archive as deletions.
+  local removed = {}
+  for _, rec in ipairs(st.records) do
+    if not seen[rec.id] then removed[#removed + 1] = rec end
+  end
+
+  -- Re-read the queue for other files (may have changed) and reassemble.
+  local final = {}
+  for _, rec in ipairs(read_records(st.root)) do
+    if rec.path ~= st.abspath then final[#final + 1] = rec end
+  end
+  for _, rec in ipairs(kept) do final[#final + 1] = rec end
+
+  if #removed > 0 then archive_records(st.root, removed) end
+  write_records(st.root, final)
+end
+
+function M._inspect_finish()
+  local st = M._inspect
+  if not st then return end
+  M._inspect = nil
+  pcall(inspect_reconcile, st)
+  if st.win and vim.api.nvim_win_is_valid(st.win) then
+    vim.api.nvim_win_close(st.win, true)
+  end
+  M.refresh(0)
+end
+
+function M.inspect()
+  if M._inspect then M._inspect_finish() end
+
+  local abspath = vim.fn.expand("%:p")
+  if abspath == "" then
+    notify("current buffer has no file path", vim.log.levels.ERROR)
+    return
+  end
+
+  local root = repo_root_for(abspath)
+  local records = {}
+  for _, rec in ipairs(read_records(root)) do
+    if rec.path == abspath and type(rec.line) == "number" then
+      records[#records + 1] = rec
+    end
+  end
+  if #records == 0 then
+    notify("no comments for " .. vim.fn.expand("%:t"))
+    return
+  end
+  table.sort(records, function(a, b) return (a.line or 0) < (b.line or 0) end)
+
+  local lines = {}
+  for _, rec in ipairs(records) do lines[#lines + 1] = fmt_row(rec) end
+
+  local uis = vim.api.nvim_list_uis()
+  local width = (uis[1] and math.floor(uis[1].width * 0.62)) or 80
+  local height = math.max(1, math.min(#lines, 20))
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].filetype = "comments-inspect"
+
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = "editor",
+    title = " comments: " .. vim.fn.expand("%:t") .. " (edit · dd to delete) ",
+    title_pos = "left",
+    row = math.floor((vim.o.lines - height) / 2 - 1),
+    col = math.floor((vim.o.columns - width) / 2),
+    width = width,
+    height = height,
+    style = "minimal",
+    border = "rounded",
+  })
+
+  M._inspect = { win = win, buf = buf, root = root, abspath = abspath, records = records }
+
+  for _, key in ipairs({ "q", "<Esc>" }) do
+    vim.keymap.set("n", key, function() M._inspect_finish() end,
+      { buffer = buf, nowait = true, desc = "comments: save & close inspect pane" })
+  end
+  vim.api.nvim_create_autocmd({ "BufWinLeave", "BufLeave" }, {
+    buffer = buf,
+    once = true,
+    callback = function() M._inspect_finish() end,
+  })
+end
+
 local function random_id()
   local charset = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
   local id = ""
@@ -285,6 +436,9 @@ function M.setup(opts)
 
   vim.keymap.set("n", M.config.keys.remove, M.remove_file,
     { desc = "comments: remove all comments for current file" })
+
+  vim.keymap.set("n", M.config.keys.inspect, M.inspect,
+    { desc = "comments: inspect/edit comments for current file" })
 
   -- Re-place dots when a buffer loads or is shown. After the /comments skill
   -- clears the queue, the dots vanish on the next buffer enter (or :CommentsRefresh).

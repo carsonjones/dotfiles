@@ -96,6 +96,19 @@ return {
     },
     opts = {},
   },
+  {
+    'shortcuts/no-neck-pain.nvim',
+    keys = {
+      { '<leader>np', '<cmd>NoNeckPain<cr>', desc = 'Toggle centered buffer' },
+      { '<leader>n=', '<cmd>NoNeckPainWidthUp<cr>', desc = 'Widen buffer' },
+      { '<leader>n-', '<cmd>NoNeckPainWidthDown<cr>', desc = 'Narrow buffer' },
+    },
+    opts = {
+      width = 100,
+      mappings = { enabled = false },
+      buffers = { left = { enabled = false } },
+    },
+  },
   { 'folke/persistence.nvim', event = 'BufReadPre', opts = {} },
   { 'tpope/vim-sleuth', event = 'BufReadPost' },
   { 'folke/todo-comments.nvim', event = 'BufReadPost', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
