@@ -303,6 +303,11 @@ hunk() {
   esac
   command hunk "$@"
 }
+# Format HTML (and friends) in place via prettier, on demand
+htmlfmt() {
+  [[ -z "$1" ]] && { echo "usage: htmlfmt <file>..." >&2; return 1; }
+  npx --yes prettier --write --tab-width 2 "$@"
+}
 alias edit-config="nvim ~/.config"
 alias oc="opencode"
 alias :q="__smart_exit"

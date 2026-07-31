@@ -155,20 +155,9 @@ return {
             },
           },
         },
-        tailwindcss = {
-          -- Monorepo (~/main): the default root_dir falls back to package.json/.git,
-          -- which roots the server at ~/main. From there it can't tie a file to its
-          -- nearest tailwind.config, guesses v4, rejects the project's v3 @tailwind
-          -- directives, and pops "No Tailwind CSS project". Anchor strictly on the
-          -- tailwind config so each sub-package gets its own correctly-rooted client;
-          -- files with no config nearby just don't attach (no popup).
-          root_dir = require('lspconfig.util').root_pattern(
-            'tailwind.config.ts',
-            'tailwind.config.js',
-            'tailwind.config.cjs',
-            'tailwind.config.mjs'
-          ),
-        },
+        -- tailwindcss root_dir is overridden via vim.lsp.config below; keep it here
+        -- only so it lands in ensure_installed (mason installs the server binary)
+        tailwindcss = {},
         -- kotlin is set up via vim.lsp.config below; keep it here only so it
         -- lands in ensure_installed (mason installs the server binary)
         kotlin_language_server = {},
@@ -217,6 +206,32 @@ return {
         },
       })
       vim.lsp.enable 'kotlin_language_server'
+
+      -- mason-lspconfig 2.x auto-enables tailwindcss with nvim-lspconfig's default
+      -- config, whose root_dir has a `.git` fallback for tailwind v4. Inside ~/main
+      -- (a git repo) that roots the server at ~/main, which can't tie a file to its
+      -- nearest tailwind.config, guesses v4, rejects the project's v3 @tailwind
+      -- directives, and pops "No Tailwind CSS project" on every save (incl. ~/main/
+      -- scratch/*.html). Anchor strictly on the tailwind config so each sub-package
+      -- gets its own correctly-rooted client; files with no config nearby just don't
+      -- attach (no popup). Uses the new (bufnr, on_dir) signature vim.lsp.config wants.
+      vim.lsp.config('tailwindcss', {
+        capabilities = capabilities,
+        workspace_required = true,
+        root_dir = function(bufnr, on_dir)
+          local fname = vim.api.nvim_buf_get_name(bufnr)
+          local found = vim.fs.find({
+            'tailwind.config.ts',
+            'tailwind.config.js',
+            'tailwind.config.cjs',
+            'tailwind.config.mjs',
+          }, { path = fname, upward = true })[1]
+          if found then
+            on_dir(vim.fs.dirname(found))
+          end
+        end,
+      })
+      vim.lsp.enable 'tailwindcss'
 
       require('mason').setup()
 
