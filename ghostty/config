@@ -4,9 +4,8 @@ background = 252A34
 selection-background = 3D5A80
 
 window-colorspace = "display-p3"
-
 font-size = 16
-adjust-cell-height = 15%
+adjust-cell-height = 30%
 
 background-opacity = .96
 background-blur-radius = 20
@@ -31,3 +30,6 @@ keybind = cmd+backspace=esc:W
 # Mac keyboards have no End key, so ctrl+End never reaches herdr's
 # "jump to bottom". Send the literal ctrl+End CSI sequence on cmd+down.
 keybind = cmd+down=text:\x1b[1;5F
+
+# per-machine overrides, gitignored (*.local). ? = ok if missing
+config-file = ?config.local
