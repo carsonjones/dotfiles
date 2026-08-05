@@ -413,7 +413,7 @@ alias yz="yazi"
 # alias bun="_sfw bun"
 alias comments="uv run ~/src/dotfiles/agents/skills/comments/comments.py"
 
-CODEX="/Applications/Codex.app/Contents/Resources/codex"
+CODEX="/Applications/ChatGPT.app/Contents/Resources/codex"
 codex() { command "$CODEX" "$@"; } 
 
 rename-tab() {
