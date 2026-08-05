@@ -5,7 +5,7 @@ return {
   ft = { 'html', 'css', 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'astro' },
   opts = {
     document_color = {
-      enabled = true,
+      enabled = false,
       kind = 'inline',
     },
     conceal = {

@@ -107,6 +107,11 @@ return {
         end,
       })
 
+      -- nvim core enables LSP document-color highlighting by default for any
+      -- client with colorProvider (tailwindcss); we render colors ourselves
+      -- via tailwind-tools, so turn off core's duplicate highlighting
+      vim.lsp.document_color.enable(false)
+
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
       capabilities.general = { positionEncodings = { 'utf-16' } }
