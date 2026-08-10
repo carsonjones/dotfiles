@@ -31,13 +31,6 @@ return {
         desc = '[S]earch [K]eymaps',
       },
       {
-        '<leader>sf',
-        function()
-          require('telescope.builtin').find_files()
-        end,
-        desc = '[S]earch [F]iles',
-      },
-      {
         '<leader>ss',
         function()
           require('telescope.builtin').builtin()

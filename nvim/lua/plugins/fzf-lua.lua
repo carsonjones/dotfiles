@@ -1,12 +1,24 @@
--- Native-fzf live grep. Telescope's live_grep re-sorts/re-renders in Lua on
+-- Native fzf for file/grep search. Telescope re-sorts/re-renders in Lua on
 -- every keystroke, which crawls on large repos even with telescope-fzf-native
--- loaded. fzf-lua shells out to the real `fzf` binary instead, so <leader>sg
--- stays fast regardless of repo size.
+-- loaded. fzf-lua shells out to the real `fzf` binary instead, so <leader>sf
+-- and <leader>sg stay fast regardless of repo size.
 return {
   'ibhagwan/fzf-lua',
   dependencies = { 'nvim-tree/nvim-web-devicons' },
   cmd = 'FzfLua',
   keys = {
+    {
+      '<leader>sf',
+      function()
+        require('fzf-lua').files {
+          -- matches FZF_DEFAULT_COMMAND (zsh/zshrc) so results agree with the
+          -- `vf` CLI alias; keep the main/code exclude to dodge the symlink
+          -- loop into ~/src noted in telescope.lua.
+          fd_opts = "--color=never --type f --type d --hidden --follow --exclude .git --exclude '**/main/code'",
+        }
+      end,
+      desc = '[S]earch [F]iles (fzf)',
+    },
     {
       '<leader>sg',
       function()
