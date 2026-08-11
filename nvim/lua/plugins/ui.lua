@@ -4,7 +4,11 @@ return {
     config = function()
       -- Normal has no bg under transparent onedark; give notify a concrete
       -- base to blend against so popups aren't pure black.
-      require('notify').setup { background_colour = '#252A34' }
+      require('notify').setup {
+        background_colour = '#252A34',
+        max_width = 40,
+        timeout = 1500,
+      }
       vim.notify = require 'notify'
     end,
   },
