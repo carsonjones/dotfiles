@@ -135,13 +135,19 @@ link_yazi() {
 }
 
 link_agent_skills() {
-    # Shared Agent Skills used by multiple harnesses. Link per-item so local/user
-    # skills already present in the destination are left untouched.
-    local dest="$1"
+    # Shared Agent Skills used by multiple harnesses. Link per-item so real
+    # local/user skill files and directories in the destination stay untouched.
+    local dest="$1" item target
     [ -d "$DOTFILES/agents/skills" ] || return 0
     mkdir -p "$dest"
     for item in "$DOTFILES"/agents/skills/*; do
-        [ -e "$item" ] && ln -sfn "$item" "$dest/$(basename "$item")"
+        [ -e "$item" ] || continue
+        target="$dest/$(basename "$item")"
+        if [ -e "$target" ] && [ ! -L "$target" ]; then
+            echo "  warning: leaving existing agent skill untouched: $target" >&2
+            continue
+        fi
+        ln -sfn "$item" "$target"
     done
 }
 
