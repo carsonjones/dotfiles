@@ -8,6 +8,7 @@ type ShelleyState = {
 };
 
 type ShelleyMessage = {
+  sequence_id?: number;
   type?: string;
   text?: string;
   end_of_turn?: boolean;
@@ -45,6 +46,51 @@ function saveState(pi: ExtensionAPI): void {
   pi.appendEntry<ShelleyState>(STATE_ENTRY, { conversationId });
 }
 
+async function readShelleyMessages(
+  pi: ExtensionAPI,
+  id: string,
+  signal?: AbortSignal,
+): Promise<ShelleyMessage[]> {
+  const read = await pi.exec("shelley", ["client", "read", id], { signal, timeout: 30_000 });
+  if (read.code !== 0) {
+    throw new Error((read.stderr || read.stdout || `shelley read exited ${read.code}`).trim());
+  }
+  return parseJsonLines<ShelleyMessage>(read.stdout);
+}
+
+async function waitForShelleyResponse(
+  pi: ExtensionAPI,
+  id: string,
+  afterSequence: number,
+  signal?: AbortSignal,
+): Promise<string> {
+  const deadline = Date.now() + TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const messages = await readShelleyMessages(pi, id, signal);
+    const response = messages.find(
+      (message) =>
+        (message.sequence_id ?? 0) > afterSequence &&
+        message.type === "agent" &&
+        message.end_of_turn === true &&
+        Boolean(message.text?.trim()),
+    )?.text?.trim();
+    if (response) return response;
+
+    await new Promise<void>((resolve, reject) => {
+      const onAbort = () => {
+        clearTimeout(timeout);
+        reject(signal?.reason ?? new Error("Aborted"));
+      };
+      const timeout = setTimeout(() => {
+        signal?.removeEventListener("abort", onAbort);
+        resolve();
+      }, 1000);
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
+  }
+  throw new Error("Timed out waiting for Shelley");
+}
+
 async function askShelley(
   pi: ExtensionAPI,
   prompt: string,
@@ -53,6 +99,9 @@ async function askShelley(
   startNew = false,
 ): Promise<{ conversationId: string; response: string }> {
   if (startNew) conversationId = null;
+
+  const previousMessages = conversationId ? await readShelleyMessages(pi, conversationId, signal) : [];
+  const afterSequence = Math.max(0, ...previousMessages.map((message) => message.sequence_id ?? 0));
 
   const chatArgs = ["client", "chat", "-p", prompt, "-cwd", cwd];
   if (conversationId) chatArgs.push("-c", conversationId);
@@ -69,18 +118,7 @@ async function askShelley(
   conversationId = result.conversation_id;
   saveState(pi);
 
-  const read = await pi.exec("shelley", ["client", "read", "-wait", conversationId], {
-    signal,
-    timeout: TIMEOUT_MS,
-  });
-  if (read.code !== 0) {
-    throw new Error((read.stderr || read.stdout || `shelley read exited ${read.code}`).trim());
-  }
-
-  const messages = parseJsonLines<ShelleyMessage>(read.stdout);
-  const response = messages.filter((message) => message.type === "agent" && message.text).at(-1)?.text?.trim();
-  if (!response) throw new Error("Shelley completed without a text response");
-
+  const response = await waitForShelleyResponse(pi, conversationId, afterSequence, signal);
   return { conversationId, response };
 }
 
