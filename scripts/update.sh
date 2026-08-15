@@ -233,7 +233,9 @@ section_plugins() {
 
     # zinit: needs an interactive zsh so its `zinit` function loads from zshrc.
     if [ -d "${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git" ]; then
-        try zinit-update zsh -ic 'zinit self-update && zinit update --all'
+        # Plugin updates can leave completion symlinks pointing at files that
+        # upstream removed. Clear them before the next shell runs compinit.
+        try zinit-update zsh -ic 'zinit self-update && zinit update --all; update_status=$?; zinit cclear; exit $update_status'
     else
         mark_skipped zinit "not installed"
     fi

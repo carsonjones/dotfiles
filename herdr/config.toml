@@ -99,6 +99,8 @@ panel_bg = "#252A34"
 
 [ui]
 show_agent_labels_on_pane_borders = true
+# Let Ghostty render text selection locally, avoiding an SSH round trip per drag event.
+mouse_capture = false
 
 agent_panel_sort = "spaces"
 [ui.toast]

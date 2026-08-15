@@ -221,6 +221,15 @@ alias hist='histdb'
 alias zsh="nvim ~/.zshrc"
 alias zshlocal="nvim ~/.zshrc.local"
 alias savezsh="source ~/.zshrc"
+# Remove stale Zinit completion links and rebuild Zsh's completion cache.
+zsh-repair() {
+  zinit cclear
+  rm -f "${ZDOTDIR:-$HOME}"/.zcompdump*(N)
+  autoload -Uz compinit && compinit
+  zinit cdreplay -q
+  print "Zsh completions repaired."
+}
+alias fixzsh='zsh-repair'
 alias edit="zed"
 alias cc="claude"
 cc-color() {
