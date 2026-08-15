@@ -18,7 +18,7 @@ FORCE_SHELL=false
 LIST_COMPONENTS=false
 
 # Keep in sync with scripts/install.sh and scripts/picker/main.go.
-BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link herdr-plugins)
+BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link herdr-plugins)
 SLIM_COMPONENTS=(apt-core gh fzf nvim yazi hunk herdr bun uv mise zinit node link)
 
 usage() {
@@ -83,7 +83,7 @@ fi
 # Component name -> brew formula name (mirrors install.sh).
 declare -A BREW_ALIAS=(
     [git]=git [nvim]=neovim [fzf]=fzf [ripgrep]=ripgrep [fd]=fd [bat]=bat
-    [gh]=gh [tmux]=tmux [zellij]=zellij [zsh]=zsh [lazygit]=lazygit
+    [gh]=gh [zsh]=zsh [lazygit]=lazygit
     [sqlite3]=sqlite [yazi]=yazi [hunk]=hunk [imagemagick]=imagemagick
 )
 
@@ -284,7 +284,7 @@ dispatch_brew() {
         node)  remove_node ;;
         link)  remove_link ;;
         herdr-plugins) remove_herdr_plugins ;;
-        git|nvim|fzf|ripgrep|fd|bat|gh|tmux|zellij|lazygit|sqlite3|yazi|hunk|imagemagick)
+        git|nvim|fzf|ripgrep|fd|bat|gh|lazygit|sqlite3|yazi|hunk|imagemagick)
             remove_brew_formula "$c" ;;
         *) warn "unknown brew-path component: $c" ;;
     esac

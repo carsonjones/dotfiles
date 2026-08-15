@@ -115,7 +115,7 @@ func isProbablyInstalled(comp string) bool {
 	// map component -> binary name to probe with `command -v`
 	bin := map[string]string{
 		"git": "git", "nvim": "nvim", "fzf": "fzf", "ripgrep": "rg", "fd": "fd",
-		"bat": "bat", "gh": "gh", "tmux": "tmux", "zellij": "zellij", "zsh": "zsh",
+		"bat": "bat", "gh": "gh", "zsh": "zsh",
 		"lazygit": "lazygit", "sqlite3": "sqlite3", "yazi": "yazi", "hunk": "hunk",
 		"imagemagick": "magick", "docker": "docker", "zed": "zed",
 		"ghostty": "ghostty", "tailscale": "tailscale", "rust": "rustup",

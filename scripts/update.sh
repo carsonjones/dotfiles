@@ -251,10 +251,6 @@ section_plugins() {
         mark_skipped nvim-plugins "nvim not installed"
     fi
 
-    local tpm="$HOME/.config/tmux/plugins/tpm/bin/update_plugins"
-    if [ -x "$tpm" ]; then try tpm-update "$tpm" all
-    else mark_skipped tpm "not installed"; fi
-
     if command -v ya >/dev/null 2>&1; then try yazi-pkg ya pkg upgrade
     else mark_skipped yazi-pkg "ya not installed"; fi
 }

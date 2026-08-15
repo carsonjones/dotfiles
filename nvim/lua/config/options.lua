@@ -9,7 +9,7 @@ vim.schedule(function()
   vim.opt.clipboard = 'unnamedplus'
 end)
 
--- Use OSC 52 for clipboard on remote/SSH sessions (works through tmux)
+-- Use OSC 52 for clipboard on remote/SSH sessions
 if os.getenv('SSH_TTY') then
   vim.g.clipboard = {
     name = 'OSC 52',

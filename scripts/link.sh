@@ -9,7 +9,7 @@
 #   scripts/link.sh --unlink        # remove symlinks that point at $DOTFILES/*
 #   scripts/link.sh --unlink nvim   # unlink only the named components
 #
-# Components: zsh nvim ghostty zed zellij herdr comview tmux yazi agents claude pi codex
+# Components: zsh nvim ghostty zed herdr comview yazi agents claude pi codex
 set -e
 
 DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
@@ -81,13 +81,6 @@ link_zed() {
     ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
 }
 
-link_zellij() {
-    echo "Linking zellij config..."
-    mkdir -p ~/.config/zellij
-    ln -sf "$DOTFILES/zellij/config.kdl" ~/.config/zellij/config.kdl
-    ln -sfn "$DOTFILES/zellij/layouts" ~/.config/zellij/layouts
-}
-
 link_herdr() {
     echo "Linking herdr config..."
     mkdir -p ~/.config/herdr
@@ -99,17 +92,6 @@ link_comview() {
     echo "Linking comview config..."
     mkdir -p ~/.config/comview
     ln -sf "$DOTFILES/comview/config.json" ~/.config/comview/config.json
-}
-
-link_tmux() {
-    echo "Linking tmux config..."
-    mkdir -p ~/.config/tmux
-    ln -sf "$DOTFILES/tmux/tmux.conf" ~/.config/tmux/tmux.conf
-    # TPM (tmux plugin manager) — config references it, clone if missing
-    if command -v tmux &>/dev/null && [ ! -d ~/.config/tmux/plugins/tpm ]; then
-        echo "Installing TPM..."
-        git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
-    fi
 }
 
 link_yazi() {
@@ -218,10 +200,8 @@ link_all() {
         link_ghostty
         link_zed
     fi
-    link_zellij
     link_herdr
     link_comview
-    link_tmux
     link_yazi
     link_agents
     link_claude
@@ -282,12 +262,6 @@ unlink_zed() {
     rm_dot_symlink ~/.config/zed/keymap.json
 }
 
-unlink_zellij() {
-    echo "Unlinking zellij config..."
-    rm_dot_symlink ~/.config/zellij/config.kdl
-    rm_dot_dir_symlink ~/.config/zellij/layouts
-}
-
 unlink_herdr() {
     echo "Unlinking herdr config..."
     rm_dot_symlink ~/.config/herdr/config.toml
@@ -297,12 +271,6 @@ unlink_herdr() {
 unlink_comview() {
     echo "Unlinking comview config..."
     rm_dot_symlink ~/.config/comview/config.json
-}
-
-unlink_tmux() {
-    echo "Unlinking tmux config..."
-    rm_dot_symlink ~/.config/tmux/tmux.conf
-    # TPM clone is user data, leave it in place
 }
 
 unlink_yazi() {
@@ -367,10 +335,8 @@ unlink_all() {
     unlink_nvim
     unlink_ghostty
     unlink_zed
-    unlink_zellij
     unlink_herdr
     unlink_comview
-    unlink_tmux
     unlink_yazi
     unlink_agents
     unlink_claude

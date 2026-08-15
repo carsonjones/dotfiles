@@ -25,11 +25,10 @@ $PATH"
 #$HOME.local/share/mise/shims:
 
 # Keep PATH entries unique; otherwise `which -a` shows the same binary twice
-# when inherited shell/zellij PATH already contains one of the entries above.
+# when the inherited PATH already contains one of the entries above.
 typeset -U path PATH
 
-# Keep zsh-histdb's internal sqlite calls off wrapper/shim paths that can
-# prompt during restored zellij startup.
+# Keep zsh-histdb's internal sqlite calls off wrapper/shim paths.
 sqlite3() {
   local sqlite_bin
 
@@ -203,38 +202,11 @@ typeset -U path PATH
 
 typeset -g DOTFILES_ROOT="${DOTFILES:-${${(%):-%x}:A:h:h}}"
 
-if command -v zellij >/dev/null 2>&1 && [ -f "$DOTFILES_ROOT/zsh/zshrc.zellij" ]; then
-  source "$DOTFILES_ROOT/zsh/zshrc.zellij"
-fi
-
 ########################################
 # ALIASES
 ########################################
 
 ## General
-__smart_exit() {
-  local mode="detach"
-
-  if [[ "${1:-}" == "--kill-session" ]]; then
-    mode="kill"
-    shift
-  fi
-
-  if [[ -n "${ZELLIJ:-}" ]] && command -v zellij >/dev/null 2>&1; then
-    __zellij_safe_exit "$mode"
-    return $?
-  fi
-  builtin exit "$@"
-}
-
-__detach_or_exit() {
-  if [[ -n "${ZELLIJ:-}" ]] && command -v zellij >/dev/null 2>&1; then
-    zellij action detach >/dev/null 2>&1
-    return $?
-  fi
-  builtin exit "$@"
-}
-
 # vim :qa ("quit all") -> close the whole herdr tab; plain exit elsewhere.
 __herdr_close_tab() {
   if [[ -n "${HERDR_ENV:-}" && -n "${HERDR_TAB_ID:-}" ]] && command -v herdr >/dev/null 2>&1; then
@@ -310,12 +282,8 @@ htmlfmt() {
 }
 alias edit-config="nvim ~/.config"
 alias oc="opencode"
-alias :q="__smart_exit"
-alias :Q="__smart_exit"
-alias :qk="__smart_exit --kill-session"
-alias :QK="__smart_exit --kill-session"
-alias :qd="__detach_or_exit"
-alias :QD="__detach_or_exit"
+alias :q="exit"
+alias :Q="exit"
 alias :qa="__herdr_close_tab"
 alias :QA="__herdr_close_tab"
 # alias review='git diff | comview'
@@ -392,10 +360,6 @@ alias claude-config='cursor "$HOME/Library/Application Support/Claude/claude_des
 
 ## Tools
 alias lg="lazygit"
-alias tl='tmux ls'
-alias ta='tmux attach -t'
-alias tn='tmux new -s'
-alias tk='tmux kill-session -t'
 alias nv='nvim'
 alias nvd='nvim $(git diff --name-only HEAD)'
 alias nvim-help='open ~/src/dotfiles/nvim/keybindings.html'

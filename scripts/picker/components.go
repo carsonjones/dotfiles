@@ -10,8 +10,6 @@ var brewComponents = []component{
 	{"fd", "fd"},
 	{"bat", "bat"},
 	{"gh", "gh (GitHub CLI)"},
-	{"tmux", "tmux"},
-	{"zellij", "zellij"},
 	{"zsh", "zsh (and set as default shell)"},
 	{"lazygit", "lazygit"},
 	{"sqlite3", "sqlite"},

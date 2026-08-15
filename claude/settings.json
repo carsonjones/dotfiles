@@ -7,17 +7,6 @@
     ]
   },
   "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ -n \"$ZELLIJ_PANE_ID\" ]; then zellij pipe --name \"zellij-attention::waiting::$ZELLIJ_PANE_ID\"; fi"
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "*",
@@ -26,16 +15,6 @@
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session",
             "timeout": 10
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ -n \"$ZELLIJ_PANE_ID\" ]; then zellij pipe --name \"zellij-attention::completed::$ZELLIJ_PANE_ID\"; fi"
           }
         ]
       }

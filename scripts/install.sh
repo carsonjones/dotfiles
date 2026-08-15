@@ -9,7 +9,7 @@ LIST_COMPONENTS=false
 
 # Components installed by each provisioning path. Keep in sync with
 # scripts/picker/main.go (the TUI hardcodes the same lists).
-BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link herdr-plugins)
+BREW_COMPONENTS=(brew git nvim fzf ripgrep fd bat gh zsh lazygit sqlite3 yazi hunk imagemagick docker zed ghostty tailscale rust mise bun uv zinit node link herdr-plugins)
 SLIM_COMPONENTS=(apt-core gh fzf nvim yazi hunk herdr bun uv mise zinit node link)
 
 usage() {
@@ -227,7 +227,7 @@ else
         esac
     }
     to_install=()
-    for comp in git nvim fzf ripgrep fd bat gh tmux zellij zsh lazygit sqlite3 yazi hunk; do
+    for comp in git nvim fzf ripgrep fd bat gh zsh lazygit sqlite3 yazi hunk; do
         want "$comp" && to_install+=("$(brew_alias "$comp")")
     done
     if [ ${#to_install[@]} -gt 0 ]; then
