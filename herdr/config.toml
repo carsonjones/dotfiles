@@ -1,18 +1,50 @@
+# General
 onboarding = false
 
+# Navigation
 [keys]
 previous_agent = "shift+alt+["
 next_agent = "shift+alt+]"
 previous_tab = "alt+["
 next_tab = "alt+]"
 
-# alt+1..9 focuses tab N within the active workspace (herdr appends 1..9).
+# Focus tab 1–9 in the active workspace with alt+1..9.
 [keys.indexed]
 tabs = "alt"
 
-# tiles plugin (herdr/plugins/tiles): tile the current pane.
-#   prefix+y = horizontal, prefix+u = vertical.
-#   +shift "flips" the big/small side; +alt "reverts" to an even 50/50 split.
+# Appearance
+[theme]
+name = "one-dark"
+
+[theme.custom]
+surface_dim = "#1f232a" # Selected sidebar row
+accent = "#61afef"      # Selection border and navigation accents
+panel_bg = "#252A34"    # Match the Ghostty background
+
+[ui]
+show_agent_labels_on_pane_borders = true
+sidebar_collapsed_mode = "hidden"
+agent_panel_sort = "spaces"
+
+[ui.toast]
+delivery = "terminal"
+
+[ui.sound]
+enabled = false
+
+# Persistence
+[session]
+resume_agents_on_restore = true
+
+[experimental]
+pane_history = true
+
+################################################################################
+# Plugins
+################################################################################
+
+# Tiles
+# y: horizontal, u: vertical, shift: flip proportions, alt: reset to even.
 [[keys.command]]
 key = "prefix+y"
 type = "plugin_action"
@@ -49,25 +81,21 @@ type = "plugin_action"
 command = "local.tiles.v-even"
 description = "tile: vertical revert, even 50/50"
 
-# single-space plugin (herdr/plugins/single-space): prefix+shift+s collects
-# every pane from other workspaces into the current one, each as a new tab.
+# Single Space
 [[keys.command]]
 key = "prefix+shift+s"
 type = "plugin_action"
 command = "local.single_space.collect"
 description = "single-space: collect all panes into current space"
 
-# agents plugin (~/src/agents, linked via `herdr plugin link`): prefix+a
-# launches the live agents dashboard, or jumps to its tab if already running
-# (relaunches in place if you'd quit it). Idempotent — never stacks dashboards.
+# Agent dashboard
 [[keys.command]]
 key = "prefix+a"
 type = "plugin_action"
 command = "local.agents.toggle"
 description = "agents: launch / jump to the dashboard"
 
-# termscope
-
+# Termscope
 [[keys.command]]
 key = "ctrl+shift+a"
 type = "plugin_action"
@@ -79,42 +107,3 @@ key = "ctrl+e"
 type = "plugin_action"
 command = "termscope.open-links"
 description = "visible-screen link picker"
-
-
-[theme]
-name = "one-dark"
-
-# Override individual color tokens on top of the base theme.
-# Selected workspace / agent rows pick up `surface0` (subtle row highlight)
-# and the `accent` color for borders/markers. Tweak these to make selection
-# pop against your shell background.
-[theme.custom]
-# Sidebar selected workspace / agent row highlight (`surface_dim`).
-# Slightly darker than the panel so selection reads even with terminal opacity.
-surface_dim = "#1f232a"  # selected sidebar row background
-accent = "#61afef"        # selection border + nav accents (one-dark blue)
-# Match the panel/tab-strip background to the ghostty terminal bg (#252A34)
-# so the chrome doesn't read as a slightly-off band against the panes.
-panel_bg = "#252A34"
-
-[ui]
-show_agent_labels_on_pane_borders = true
-# Let Ghostty render text selection locally, avoiding an SSH round trip per drag event.
-mouse_capture = false
-
-agent_panel_sort = "spaces"
-[ui.toast]
-delivery = "terminal"
-
-[ui.sound]
-enabled = false
-
-[session]
-# Restore supported AI-agent panes (Claude Code, Codex, Pi, etc.) into their
-# native conversation sessions after a herdr server restart.
-resume_agents_on_restore = true
-
-[experimental]
-# Save recent pane screen history across full server restarts.
-pane_history = true
-
