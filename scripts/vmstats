@@ -1,0 +1,27 @@
+#!/bin/bash
+# Check storage and memory across all exe.dev VMs
+
+VMS="jonze clovis freezing sandy datas"
+
+printf "\n%-12s %6s %6s %5s   %6s %6s\n" "VM" "DISK" "AVAIL" "USE%" "MEM" "AVAIL"
+printf "%-12s %6s %6s %5s   %6s %6s\n" "---" "----" "-----" "----" "---" "-----"
+
+for vm in $VMS; do
+  if [ "$vm" = "jonze" ]; then
+    disk=$(df -h / | awk 'NR==2 {print $3, $4, $5}')
+    mem=$(free -h | awk '/Mem:/ {print $3, $7}')
+  else
+    disk=$(ssh -o ConnectTimeout=3 ${vm}.exe.xyz "df -h /" 2>/dev/null | awk 'NR==2 {print $3, $4, $5}')
+    mem=$(ssh -o ConnectTimeout=3 ${vm}.exe.xyz "free -h" 2>/dev/null | awk '/Mem:/ {print $3, $7}')
+  fi
+  
+  if [ -n "$disk" ]; then
+    read disk_used disk_avail disk_pct <<< "$disk"
+    read mem_used mem_avail <<< "$mem"
+    printf "%-12s %6s %6s %5s   %6s %6s\n" "$vm" "$disk_used" "$disk_avail" "$disk_pct" "$mem_used" "$mem_avail"
+  else
+    printf "%-12s %s\n" "$vm" "-- offline --"
+  fi
+done
+
+echo ""
