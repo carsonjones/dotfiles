@@ -248,6 +248,12 @@ return {
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
+        -- automatic_enable enables every *installed* mason server regardless
+        -- of the handlers below (e.g. ts_ls/tsgo installed alongside vtsls),
+        -- causing duplicate LSP clients + duplicate diagnostics on the same
+        -- buffer. We enable everything explicitly (handlers loop below, plus
+        -- the vim.lsp.enable calls above for vtsls/tailwindcss/kotlin).
+        automatic_enable = false,
         handlers = {
           function(server_name)
             -- vtsls is set up directly via vim.lsp.config above; skip the

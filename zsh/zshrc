@@ -16,12 +16,12 @@ export PATH="\
 $HOME/bin:\
 $HOME/.local/bin:\
 $HOME/.bun/bin:\
+$PATH:\
 /usr/local/bin:\
 /usr/bin:\
 /bin:\
 /usr/sbin:\
-/sbin:\
-$PATH"
+/sbin"
 #$HOME.local/share/mise/shims:
 
 # Keep PATH entries unique; otherwise `which -a` shows the same binary twice
