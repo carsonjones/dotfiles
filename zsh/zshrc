@@ -632,3 +632,7 @@ alias agentsw='bun ~/src/herdr-agent-dashboard//herdr-agents.tsx --interval 1000
 
 # mermaid — render clipboard contents as a diagram in the local preview server.
 alias mmd='~/src/dotfiles/tools/mermaid/bin/view-clipboard'
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
