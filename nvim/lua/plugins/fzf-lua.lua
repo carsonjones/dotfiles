@@ -12,9 +12,9 @@ return {
       function()
         require('fzf-lua').files {
           -- matches FZF_DEFAULT_COMMAND (zsh/zshrc) so results agree with the
-          -- `vf` CLI alias; keep the main/code exclude to dodge the symlink
-          -- loop into ~/src noted in telescope.lua.
-          fd_opts = "--color=never --type f --type d --hidden --follow --exclude .git --exclude '**/main/code'",
+          -- `vf` CLI alias. Per-project excludes (e.g. ~/main/code -> ~/src)
+          -- live in that project's .ignore, which fd reads on its own.
+          fd_opts = '--color=never --type f --type d --hidden --follow --exclude .git',
         }
       end,
       desc = '[S]earch [F]iles (fzf)',
