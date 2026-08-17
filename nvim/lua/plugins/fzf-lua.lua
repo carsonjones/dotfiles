@@ -77,15 +77,46 @@ return {
       desc = '[S]earch [H]ere (current word in file, fzf)',
     },
   },
+  -- One history file per picker (keyed off the picker's resume key), so
+  -- <leader>sg recalls greps and <leader>sf recalls file queries instead of
+  -- both sharing one list.
+  init = function()
+    vim.g.fzf_history_dir = vim.fn.stdpath 'data' .. '/fzf-lua-history'
+  end,
   opts = {
     winopts = {
-      height = 0.7,
-      preview = { layout = 'vertical', vertical = 'down:55%' },
+      height = 0.9,
+      preview = { layout = 'vertical', vertical = 'down:70%' },
+      -- fzf only appends to --history on accept, so a query you <Esc> out of is
+      -- lost. fzf-lua remembers it either way (for `resume`), so on close we
+      -- append it ourselves and <S-Up> can recall it next time.
+      on_close = function()
+        local cfg = require 'fzf-lua.config'
+        local query = cfg.__resume_data and cfg.__resume_data.last_query
+        local histfile = vim.tbl_get(cfg, '__resume_data', 'opts', 'fzf_opts', '--history')
+        if type(query) ~= 'string' or query == '' or type(histfile) ~= 'string' then
+          return
+        end
+        local lines = vim.fn.filereadable(histfile) == 1 and vim.fn.readfile(histfile) or {}
+        if lines[#lines] == query then
+          return
+        end
+        table.insert(lines, query)
+        -- match fzf's default --history-size so the file can't grow forever
+        while #lines > 1000 do
+          table.remove(lines, 1)
+        end
+        vim.fn.writefile(lines, histfile)
+      end,
     },
-    -- Persist query history so <S-Up>/<S-Down> recall prior searches, like
-    -- telescope's cycle_history_prev/next.
-    fzf_opts = { ['--history'] = vim.fn.stdpath 'data' .. '/fzf-lua-history' },
     keymap = {
+      -- builtin keymaps are bound nvim-side and win over the fzf ones, so the
+      -- default preview-page-up/down on <S-Up>/<S-Down> has to go for history
+      -- recall to reach fzf. Preview scroll stays on <M-S-Up>/<M-S-Down>.
+      builtin = {
+        ['<S-up>'] = false,
+        ['<S-down>'] = false,
+      },
       fzf = {
         ['shift-up'] = 'prev-history',
         ['shift-down'] = 'next-history',

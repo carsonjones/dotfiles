@@ -23,7 +23,7 @@ panel_bg = "#252A34"    # Match the Ghostty background
 
 [ui]
 show_agent_labels_on_pane_borders = true
-sidebar_collapsed_mode = "hidden"
+# sidebar_collapsed_mode = "hidden"
 agent_panel_sort = "spaces"
 
 [ui.toast]
