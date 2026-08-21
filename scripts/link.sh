@@ -81,10 +81,35 @@ link_zed() {
     ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
 }
 
+# Deep-merge base + overlay TOML: scalars/tables from the overlay win, arrays of
+# tables append, and duplicate keys.command entries collapse to the last (overlay)
+# one so a local override replaces a base keybinding instead of being disabled.
+HERDR_MERGE='. as $i ireduce ({}; . *+ $i) | with(select(.keys.command != null); .keys.command |= (reverse | unique_by(.key) | reverse))'
+
 link_herdr() {
     echo "Linking herdr config..."
     mkdir -p ~/.config/herdr
-    ln -sfn "$DOTFILES/herdr/config.toml" ~/.config/herdr/config.toml
+    # config.toml is a symlink to the portable base, unless a per-machine overlay
+    # exists (herdr/config.local.toml, gitignored) — then it's a generated file,
+    # so re-run link.sh + `herdr server reload-config` after editing either side.
+    local base="$DOTFILES/herdr/config.toml" overlay="$DOTFILES/herdr/config.local.toml" tmp
+    rm -f ~/.config/herdr/config.toml   # clear stale symlink/generated file
+    if [ ! -f "$overlay" ]; then
+        ln -sfn "$base" ~/.config/herdr/config.toml
+    elif ! command -v yq >/dev/null 2>&1; then
+        echo "  warning: yq missing, per-machine herdr overlay not merged" >&2
+        ln -sfn "$base" ~/.config/herdr/config.toml
+    else
+        tmp="$(mktemp)"
+        if yq -p toml -o toml eval-all "$HERDR_MERGE" "$base" "$overlay" > "$tmp"; then
+            mv "$tmp" ~/.config/herdr/config.toml
+            echo "  merged herdr/config.local.toml overlay"
+        else
+            rm -f "$tmp"
+            echo "  warning: herdr overlay merge failed, using base config" >&2
+            ln -sfn "$base" ~/.config/herdr/config.toml
+        fi
+    fi
     ln -sfn "$DOTFILES/herdr/plugins" ~/.config/herdr/plugins
 }
 
@@ -265,6 +290,7 @@ unlink_zed() {
 unlink_herdr() {
     echo "Unlinking herdr config..."
     rm_dot_symlink ~/.config/herdr/config.toml
+    [ -L ~/.config/herdr/config.toml ] || rm -f ~/.config/herdr/config.toml   # generated overlay merge
     rm_dot_dir_symlink ~/.config/herdr/plugins
 }
 

@@ -1,5 +1,6 @@
 *.local
 claude/settings.local.json
+herdr/config.local.toml
 node_modules/
 **/mcp.json
 !mcp.json.template
