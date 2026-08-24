@@ -38,6 +38,9 @@ INSTALL_ONLY=fzf,nvim   scripts/clean.sh --slim    # slim-path removers
 
 scripts/nvim-disable.sh --list                     # toggleable nvim plugins
 scripts/nvim-disable.sh --disable '3rd/image.nvim' # mutate nvim/lua/local.lua (git-ignored)
+
+scripts/unwrap.ts < wrapped.md                      # unwrap prose, preserve Markdown structure
+scripts/unwrap.ts -i notes.md                       # rewrite one or more files in place
 ```
 
 The picker (`scripts/dotfiles-install`) exposes update / clean / nvim-plugin toggling as top-level actions too.
