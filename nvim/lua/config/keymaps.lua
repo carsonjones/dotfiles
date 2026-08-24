@@ -1,6 +1,43 @@
 vim.api.nvim_create_user_command('Q', 'q<bang>', { bang = true, desc = 'Alias :Q to :q' })
 vim.api.nvim_create_user_command('W', 'w', { desc = 'Alias :W to :w' })
 
+local function unwrap_range(first_line, last_line)
+  local config_dir = vim.uv.fs_realpath(vim.fn.stdpath 'config') or vim.fn.stdpath 'config'
+  local script = vim.fs.joinpath(vim.fs.dirname(config_dir), 'scripts', 'unwrap.ts')
+
+  if vim.fn.executable 'bun' ~= 1 then
+    vim.notify('Unwrap requires bun', vim.log.levels.ERROR)
+    return
+  end
+  if vim.fn.filereadable(script) ~= 1 then
+    vim.notify('Unwrap script not found: ' .. script, vim.log.levels.ERROR)
+    return
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(0, first_line - 1, last_line, false)
+  local result = vim
+    .system({ 'bun', script }, {
+      stdin = table.concat(lines, '\n'),
+      text = true,
+    })
+    :wait()
+
+  if result.code ~= 0 then
+    local message = vim.trim(result.stderr or '')
+    vim.notify(message ~= '' and message or 'Unwrap failed', vim.log.levels.ERROR)
+    return
+  end
+
+  vim.api.nvim_buf_set_lines(0, first_line - 1, last_line, false, vim.split(result.stdout, '\n', { plain = true }))
+end
+
+vim.api.nvim_create_user_command('Unwrap', function(args)
+  unwrap_range(args.line1, args.line2)
+end, {
+  range = '%',
+  desc = 'Unwrap hard-wrapped prose',
+})
+
 local function centered_line_move(key)
   return function()
     local keys = vim.api.nvim_replace_termcodes(key, true, false, true)
