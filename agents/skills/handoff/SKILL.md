@@ -29,10 +29,31 @@ branch: <git branch, if in a repo>
 topic: <one line>
 status: <in-progress | done | blocked | exploring>
 tags: [<a few>]
+agent: <claude | codex | ..., if resolved>
+session_id: <id, if resolved>
+resume: <command to resume this session, if resolved>
 ---
 ```
 
 Fill `project`/`branch` from the cwd: `basename $(git rev-parse --show-toplevel)` and `git branch --show-current` (omit branch if not in a repo).
+
+### Session keys
+
+Resolve the agent + session id so the next reader can drop back into *this* conversation, not just read about it:
+
+```bash
+herdr pane current --current | python3 -c 'import json,sys; s=json.load(sys.stdin)["result"]["pane"].get("agent_session") or {}; print(s.get("agent",""), s.get("value",""))'
+```
+
+`herdr` is the terminal workspace manager the agent runs inside; it learns the id from its agent-integration hook, so this covers claude, codex, cursor, and friends. If herdr isn't running or the pane reports no `agent_session`, fall back to `$CLAUDE_CODE_SESSION_ID`. If neither resolves, **omit all three keys** — never invent an id.
+
+`resume` command by agent:
+
+- `claude` -> `claude --resume <id>`
+- `codex` -> `codex resume <id>`
+- anything else -> use that CLI's resume flag if you know it, otherwise keep `session_id` and drop `resume`
+
+Resume runs from the `project` dir, so mention that in the doc if it isn't obvious.
 
 ## Body
 
