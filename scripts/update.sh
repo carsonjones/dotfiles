@@ -253,7 +253,11 @@ section_plugins() {
         mark_skipped nvim-plugins "nvim not installed"
     fi
 
-    if command -v ya >/dev/null 2>&1; then try yazi-pkg ya pkg upgrade
+    # --discard: ya-managed plugins are disposable upstream checkouts (not
+    # tracked here), so any drift it flags is a stale install, not our edit —
+    # without this the upgrade aborts and stays stuck. Our own plugins live in
+    # yazi/plugins/ and are symlinked in, so ya never touches them.
+    if command -v ya >/dev/null 2>&1; then try yazi-pkg ya pkg upgrade --discard
     else mark_skipped yazi-pkg "ya not installed"; fi
 }
 
