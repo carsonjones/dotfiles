@@ -8,7 +8,7 @@ prepend_keymap = [
 	# Fuzzy-find files/dirs rooted at the launch cwd (vs. Z, which follows you)
 	{ on = "<C-p>", run = "plugin fzf-root", desc = "Fuzzy-find from launch dir" },
 	# Focus the selected/current directory pane; press again to restore.
-	{ on = "F", run = "plugin toggle-pane max-current", desc = "Focus current directory" },
+	{ on = "p", run = "plugin toggle-pane max-current", desc = "Focus current directory" },
 	# Temporary files-only view for the current directory; Esc restores normal view.
 	{ on = [ "g", "F" ], run = 'search_do --via=fd --args="-t f -d 1"', desc = "Files only in current dir" },
 ]
