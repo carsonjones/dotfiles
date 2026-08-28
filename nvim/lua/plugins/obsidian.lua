@@ -4,14 +4,9 @@ return {
   lazy = true,
   ft = 'markdown',
   dependencies = { 'nvim-lua/plenary.nvim' },
-  config = function(_, opts)
-    vim.opt_local.conceallevel = 2
-    require('obsidian').setup(opts)
-  end,
   opts = {
     ui = {
-      checkboxes = {},
-      bullets = {},
+      enable = false,
     },
     workspaces = vim.g.obsidian_workspaces or {},
     -- Use gf for wikilinks (built-in with obsidian.nvim)
