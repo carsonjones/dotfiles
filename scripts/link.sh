@@ -111,6 +111,10 @@ link_herdr() {
         fi
     fi
     ln -sfn "$DOTFILES/herdr/plugins" ~/.config/herdr/plugins
+    # PATH shim so agents can call `plannotator-tui` (the annotate plugin vendors the
+    # binary inside its own content-hashed plugin dir, which is not on PATH).
+    mkdir -p ~/.local/bin
+    ln -sf "$DOTFILES/herdr/bin/plannotator-tui" ~/.local/bin/plannotator-tui
 }
 
 link_comview() {
@@ -292,6 +296,7 @@ unlink_herdr() {
     rm_dot_symlink ~/.config/herdr/config.toml
     [ -L ~/.config/herdr/config.toml ] || rm -f ~/.config/herdr/config.toml   # generated overlay merge
     rm_dot_dir_symlink ~/.config/herdr/plugins
+    rm_dot_symlink ~/.local/bin/plannotator-tui
 }
 
 unlink_comview() {

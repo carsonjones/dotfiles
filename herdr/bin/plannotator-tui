@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# PATH shim for the plannotator-tui binary vendored by the herdr `annotate` plugin.
+# The plugin lives in a content-hashed dir, so glob rather than pin the hash: a
+# `herdr plugin install plannotator/herdr-annotate` that lands on a new hash keeps working.
+set -euo pipefail
+
+for candidate in "$HOME"/.config/herdr/plugins/github/annotate-*/bin/plannotator-tui; do
+    [ -x "$candidate" ] && exec "$candidate" "$@"
+done
+
+echo "plannotator-tui is not installed. Install it with:" >&2
+echo "  herdr plugin install plannotator/herdr-annotate" >&2
+exit 1
