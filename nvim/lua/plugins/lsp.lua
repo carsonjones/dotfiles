@@ -31,7 +31,8 @@ return {
           map('gd', function()
             -- In markdown, follow the wikilink/link under the cursor (tailwindcss
             -- attaches here but doesn't support textDocument/definition).
-            if vim.bo[event.buf].filetype == 'markdown' and require('obsidian').util.cursor_on_markdown_link(nil, nil, true) then
+            local has_obsidian, obsidian = pcall(require, 'obsidian')
+            if vim.bo[event.buf].filetype == 'markdown' and has_obsidian and obsidian.util.cursor_on_markdown_link(nil, nil, true) then
               return vim.cmd 'ObsidianFollowLink'
             end
             require('telescope.builtin').lsp_definitions()

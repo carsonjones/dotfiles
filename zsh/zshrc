@@ -386,8 +386,39 @@ alias yz="yazi"
 # alias bun="_sfw bun"
 alias comments="uv run ~/src/dotfiles/agents/skills/comments/comments.py"
 
-CODEX="/Applications/ChatGPT.app/Contents/Resources/codex"
-codex() { command "$CODEX" "$@"; } 
+# The ChatGPT app ships its own codex binary and ~/.codex/config.toml is written
+# for it, pointing notify + a couple MCP servers at /Applications paths. Prefer
+# that binary when it's there; otherwise fall back to the CLI on PATH and turn
+# off the app-only keys at invocation, so the config file stays mac-complete.
+CODEX_APP="/Applications/ChatGPT.app/Contents/Resources/codex"
+codex() {
+  if [[ -x $CODEX_APP ]]; then
+    command "$CODEX_APP" "$@"
+    return $?
+  fi
+
+  local cli_bin
+  if ! cli_bin=$(whence -p codex); then
+    echo "codex: no ChatGPT.app and no codex on PATH; install with: npm i -g @openai/codex" >&2
+    return 127
+  fi
+
+  # Codex vendors its own bwrap; prepend it so the CLI stops warning about a
+  # missing sandbox. :A resolves the npm shim symlink, :h:h climbs to the package
+  # root, (N) makes a non-match expand to nothing instead of erroring.
+  local -a vendored
+  vendored=("${cli_bin:A:h:h}"/node_modules/@openai/codex-linux-*/vendor/*/codex-resources(N))
+  local PATH="$PATH"
+  if (( $#vendored )) && [[ -x ${vendored[1]}/bwrap ]]; then
+    PATH="${vendored[1]}:$PATH"
+  fi
+
+  command "$cli_bin" \
+    -c 'notify=[]' \
+    -c 'mcp_servers.node_repl.enabled=false' \
+    -c 'mcp_servers.computer-use.enabled=false' \
+    "$@"
+}
 
 rename-tab() {
   if (( $# == 0 )); then

@@ -1,6 +1,7 @@
 return {
   'epwalsh/obsidian.nvim',
   version = '*',
+  enabled = vim.g.obsidian_workspaces ~= nil and #vim.g.obsidian_workspaces > 0,
   lazy = true,
   ft = 'markdown',
   dependencies = { 'nvim-lua/plenary.nvim' },

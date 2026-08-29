@@ -1,0 +1,12 @@
+-- Machine-specific overrides. Copy to nvim/lua/local.lua (gitignored) and edit.
+
+-- Disable plugins that can't work on this machine. Assign the whole table --
+-- `vim.g.x[k] = v` mutates a copy and silently does nothing.
+vim.g.local_disabled_plugins = {
+  ['3rd/image.nvim'] = true, -- no magick luarock here
+}
+
+-- Obsidian vaults on this machine. obsidian.nvim only loads if this is set.
+vim.g.obsidian_workspaces = {
+  { name = 'main', path = vim.fn.expand '~/main' },
+}
