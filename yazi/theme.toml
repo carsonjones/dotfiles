@@ -140,19 +140,22 @@ rules = [
 ]
 
 # git.yazi — file status signs in the linemode
+# Key names must match git.yazi's CODES: unstaged/staged/added/untracked/…
 [git]
-modified  = { fg = "#e5c07b" }   # yellow  — uncommitted changes
-added     = { fg = "#98c379" }   # green   — staged add
-untracked = { fg = "#56b6c2" }   # cyan    — new, unstaged
-deleted   = { fg = "#e86671" }   # red
-updated   = { fg = "#c678dd" }   # magenta — merge/rebase update
-ignored   = { fg = "#5c6370" }   # gray
+untracked = { fg = "#ebd096" }                # cream   — new, not yet tracked
+added     = { fg = "#98c379" }                # green   — staged add
+unstaged  = { fg = "#e5c07b" }                # yellow  — tracked, edited
+staged    = { fg = "#98c379" }                # green   — tracked, staged
+deleted   = { fg = "#e86671" }                # red
+updated   = { fg = "#c678dd" }                # magenta — merge/rebase update
+ignored   = { fg = "#5c6370" }                # gray
 unknown   = { fg = "#5c6370" }
-clean     = {}                   # no chrome for clean files
+clean     = {}                                # no chrome for clean files
 
-modified_sign  = "M"
+untracked_sign = "+"
 added_sign     = "A"
-untracked_sign = "?"
+unstaged_sign  = "M"
+staged_sign    = "M"
 deleted_sign   = "D"
 updated_sign   = "U"
 ignored_sign   = "!"

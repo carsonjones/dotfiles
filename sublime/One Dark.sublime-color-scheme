@@ -1,0 +1,53 @@
+// User override for One Dark. Merged on top of the packaged scheme —
+// only what's listed here changes; everything else inherits.
+// Delete this file to return to stock.
+{
+	"variables": {
+		// Heading ramp: one desaturated blue, lightness steps down by level.
+		"md-h1": "hsl(207, 44%, 66%)",
+		"md-h2": "hsl(207, 40%, 62%)",
+		"md-h3": "hsl(207, 36%, 58%)",
+		"md-h4": "hsl(207, 32%, 54%)",
+		"md-h5": "hsl(207, 27%, 50%)",
+		"md-h6": "hsl(207, 23%, 47%)",
+
+		// Inline code: body text. A hair dimmer than --foreground (hsl(220,14%,71%))
+		// so it's distinguishable if you look, invisible if you don't.
+		"md-code": "hsl(220, 12%, 69%)",
+
+		// List markers: structural, not loud. Dimmer than prose, brighter than comments.
+		"md-marker": "hsl(220, 10%, 52%)",
+	},
+	"rules": [
+		// --- Headings (was: all levels var(red1), no hierarchy) ---
+		// Must target entity.name.section, not just markup.heading: Sublime's Markdown
+		// puts entity.name.section.markdown on the heading TEXT, and One Dark's
+		// catch-all "entity.name" -> red1 outscores a bare markup.heading selector.
+		{ "scope": "markup.heading.1 entity.name.section, markup.heading.1", "foreground": "var(md-h1)", "font_style": "bold" },
+		{ "scope": "markup.heading.2 entity.name.section, markup.heading.2", "foreground": "var(md-h2)", "font_style": "bold" },
+		{ "scope": "markup.heading.3 entity.name.section, markup.heading.3", "foreground": "var(md-h3)", "font_style": "bold" },
+		{ "scope": "markup.heading.4 entity.name.section, markup.heading.4", "foreground": "var(md-h4)", "font_style": "bold" },
+		{ "scope": "markup.heading.5 entity.name.section, markup.heading.5", "foreground": "var(md-h5)" },
+		{ "scope": "markup.heading.6 entity.name.section, markup.heading.6", "foreground": "var(md-h6)" },
+		// Fallbacks for syntaxes that don't emit a level.
+		{ "scope": "entity.name.section, markup.heading", "foreground": "var(md-h2)", "font_style": "bold" },
+
+		// The #### characters themselves — recede them so the text leads.
+		{
+			"scope": "punctuation.definition.heading.markdown",
+			"foreground": "var(md-marker)",
+			"font_style": "",
+		},
+
+		// --- Inline code (was: var(green)) ---
+		// Fenced blocks are untouched; those get real syntax highlighting.
+		{ "scope": "markup.raw - markup.raw.code-fence", "foreground": "var(md-code)" },
+
+		// --- List markers (both were var(red1)) ---
+		{ "scope": "markup.list.numbered.bullet", "foreground": "var(md-marker)" },
+		{
+			"scope": "text.html.markdown punctuation.definition.list_item.markdown",
+			"foreground": "var(md-marker)",
+		},
+	],
+}

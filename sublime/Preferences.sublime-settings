@@ -1,0 +1,27 @@
+// Settings in here override those in "Default/Preferences.sublime-settings",
+// and are overridden in turn by syntax-specific settings.
+{
+	"vintage_start_in_command_mode": true,
+	"caret_style": "solid",
+	"caret_extra_width": 2,
+	"font_size": 22,
+	"line_padding_bottom": 6,
+	"always_show_minimap_viewport": false,
+	"show_minimap": false,
+	"show_full_path": true,
+	"theme": "One.sublime-theme",
+	"word_wrap": true,
+	// "ignored_packages":
+	// [
+	// 	"Vintage",
+	// ],
+	"ignored_packages":
+	[
+		"Package Control",
+		"Vintage",
+	],
+	"index_files": false,
+	"tab_size": 2,
+	"font_face": "TX-02",
+	"color_scheme": "One Dark.sublime-color-scheme",
+}

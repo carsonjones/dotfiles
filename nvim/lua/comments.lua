@@ -25,9 +25,10 @@
 -- Read by: the `/comments` Claude Code skill.
 --
 -- When nvim runs inside a herdr pane and an idle agent (claude/codex/...) sits
--- in another pane of the same tab, queuing a comment auto-fires "/comments" in
--- that pane (debounced; see `comments.sh dispatch`). No herdr / no neighbor /
--- busy agent = silent no-op.
+-- in another pane of the same tab, queuing a comment auto-fires the comments
+-- skill in that pane -- "/comments" for claude, "$comments" for codex, since the
+-- sigil differs per agent (debounced; see `comments.sh dispatch`, which picks it).
+-- No herdr / no neighbor / busy agent = silent no-op.
 
 local M = {}
 
@@ -42,9 +43,10 @@ M.config = {
   -- Above gitsigns (default 6) so the comment dot stays visible on changed
   -- lines. Widen with `signcolumn = "auto:2"` to see both at once.
   sign_priority = 20,
-  -- After a comment is queued, auto-fire "/comments" in an idle agent pane in
-  -- the same herdr tab (comments.sh dispatch). Debounced so a burst of notes
-  -- fires once; silent no-op outside herdr or with no idle agent neighbor.
+  -- After a comment is queued, auto-fire the comments skill in an idle agent
+  -- pane in the same herdr tab (comments.sh dispatch, which picks the right
+  -- sigil for that agent). Debounced so a burst of notes fires once; silent
+  -- no-op outside herdr or with no idle agent neighbor.
   dispatch = {
     enabled = true,
     debounce_ms = 5000,
@@ -350,7 +352,7 @@ local function schedule_dispatch(rel)
     vim.system(args, { text = true }, function(out)
       local sent = out.code == 0 and vim.trim(out.stdout or "") or ""
       if sent ~= "" then
-        vim.schedule(function() notify("/comments fired in " .. sent) end)
+        vim.schedule(function() notify("comments dispatched to " .. sent) end)
       end
     end)
   end))

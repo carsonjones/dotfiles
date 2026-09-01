@@ -11,12 +11,14 @@
 #                              uses so mid-work comments aren't lost.
 #   comments.sh path           print the queue file path
 #   comments.sh dispatch [rel] [--clear]
-#                              hand "/comments [rel] [--clear]" to a sibling agent
-#                              in the same herdr tab. Prefers an idle agent; if
-#                              every agent is busy, spawns a new pane below one,
-#                              boots claude, and sends there. Silent no-op if not
-#                              in herdr / no agent neighbor. --clear asks the
-#                              receiving agent to archive+clear the ids it read.
+#                              hand the comments skill ("/comments" for claude,
+#                              "$comments" for codex) plus "[rel] [--clear]" to a
+#                              sibling agent in the same herdr tab. Prefers an idle
+#                              agent; if every agent is busy, spawns a new pane
+#                              below one, boots claude, and sends there. Silent
+#                              no-op if not in herdr / no agent neighbor. --clear
+#                              asks the receiving agent to archive+clear the ids
+#                              it read.
 #
 # The slug rule (/ -> %) and ~/.local/share/comments dir must match comments.lua.
 set -euo pipefail
@@ -82,7 +84,15 @@ case "${1:-read}" in
     [ -n "${HERDR_PANE_ID:-}" ] || exit 0
     command -v herdr >/dev/null 2>&1 || exit 0
     command -v jq >/dev/null 2>&1 || exit 0
-    cmd="/comments${rel:+ $rel}${clear:+ --clear}"
+    skill_args="${rel:+ $rel}${clear:+ --clear}"
+    # Invocation sigil is agent-specific: claude expands /comments, codex $comments.
+    # An unknown agent gets the claude form -- it's the common case.
+    cmd_for() {
+      case "$1" in
+        codex) printf '$comments%s' "$skill_args" ;;
+        *)     printf '/comments%s' "$skill_args" ;;
+      esac
+    }
 
     panes="$(herdr pane list 2>/dev/null || true)"
     [ -n "$panes" ] || exit 0
@@ -98,7 +108,7 @@ case "${1:-read}" in
     if [ -n "$idle" ]; then
       pane="${idle%%$'\t'*}"
       agent="${idle##*$'\t'}"
-      herdr pane run "$pane" "$cmd" >/dev/null 2>&1 || exit 0
+      herdr pane run "$pane" "$(cmd_for "$agent")" >/dev/null 2>&1 || exit 0
       echo "$agent ($pane)"
       exit 0
     fi
@@ -139,7 +149,7 @@ case "${1:-read}" in
     new="$(herdr pane split "$busy_pane" --direction down --cwd "$busy_cwd" --no-focus 2>/dev/null \
       | jq -r '.result.pane.pane_id // empty' 2>/dev/null || true)"
     [ -n "$new" ] || exit 0
-    herdr pane run "$new" "claude --dangerously-skip-permissions \"$cmd\"" >/dev/null 2>&1 || exit 0
+    herdr pane run "$new" "claude --dangerously-skip-permissions \"$(cmd_for claude)\"" >/dev/null 2>&1 || exit 0
     echo "spawned claude ($new, below busy $busy_pane)"
     ;;
   *)

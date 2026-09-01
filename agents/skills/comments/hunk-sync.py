@@ -13,7 +13,8 @@ so the `/comments` skill consumes nvim and Hunk notes through one path.
   hunk-sync.py [pull]     import live Hunk user notes into this repo's queue
   hunk-sync.py watch      drain this repo's live notes on an interval until killed
   hunk-sync.py --dry-run  show what would be imported without writing
-  hunk-sync.py --dispatch also fire "/comments" in an idle sibling herdr agent
+  hunk-sync.py --dispatch also fire the comments skill in an idle sibling herdr
+  agent
                           pane after importing (user-side wrapper only)
   hunk-sync.py path       print this repo's queue file path
 
@@ -48,7 +49,7 @@ usage:
   hunk-sync --dry-run    preview the mapping; write nothing
   hunk-sync --type <t>   source note type: user (default), agent, ai, all
   hunk-sync --interval N poll seconds for `watch` (default 2)
-  hunk-sync --dispatch   after importing, fire "/comments" in an idle agent pane
+  hunk-sync --dispatch   after importing, fire the comments skill in an idle agent pane
                          in the same herdr tab (comments.sh dispatch); user-side
                          only -- agent-invoked pulls must NOT pass this
   hunk-sync --clear      with --dispatch: ask the receiving agent to archive and
@@ -241,8 +242,9 @@ def _append(root: str, fresh: list[dict]) -> None:
 
 
 def dispatch(rels: list[str], clear: bool = False) -> None:
-    """Fire "/comments [rel]" in an idle agent pane in the same herdr tab via
-    `comments.sh dispatch`. One file scopes the command to it, several fall back
+    """Fire the comments skill ("/comments" for claude, "$comments" for codex --
+    comments.sh picks the sigil) with [rel] in an idle agent pane in the same herdr
+    tab, via `comments.sh dispatch`. One file scopes the command to it, several fall back
     to the whole queue. All herdr/neighbor guards live in the script; every
     failure here is silent -- dispatch is best-effort sugar, never an error."""
     if not os.environ.get("HERDR_PANE_ID"):
@@ -262,7 +264,7 @@ def dispatch(rels: list[str], clear: bool = False) -> None:
         return
     sent = (out.stdout or "").strip()
     if out.returncode == 0 and sent:
-        print(f"/comments fired in {sent}", file=sys.stderr)
+        print(f"comments dispatched to {sent}", file=sys.stderr)
 
 
 def cmd_pull(note_type: str, dry_run: bool, do_dispatch: bool = False,

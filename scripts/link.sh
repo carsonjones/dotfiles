@@ -3,13 +3,13 @@
 # refresh a machine after `git pull`. Installs NO tools (see install.sh for that).
 #
 #   scripts/link.sh                 # link everything
-#   scripts/link.sh --minimal       # skip desktop-only configs (ghostty/zed), trim nvim
+#   scripts/link.sh --minimal       # skip desktop-only configs (ghostty/zed/sublime), trim nvim
 #   scripts/link.sh nvim claude     # link only the named components
 #   scripts/link.sh -m yazi         # minimal + only yazi
 #   scripts/link.sh --unlink        # remove symlinks that point at $DOTFILES/*
 #   scripts/link.sh --unlink nvim   # unlink only the named components
 #
-# Components: zsh nvim ghostty zed herdr comview yazi agents claude pi codex
+# Components: zsh nvim ghostty zed sublime herdr comview yazi agents claude pi codex main
 set -e
 
 DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
@@ -79,6 +79,20 @@ link_zed() {
     mkdir -p ~/.config/zed
     ln -sf "$DOTFILES/zed/settings.json" ~/.config/zed/settings.json
     ln -sf "$DOTFILES/zed/keymap.json" ~/.config/zed/keymap.json
+}
+
+# macOS-only: Sublime has no XDG config path on Linux.
+SUBLIME_USER="$HOME/Library/Application Support/Sublime Text/Packages/User"
+
+link_sublime() {
+    echo "Linking sublime config..."
+    if [[ "$OS" != "macos" ]]; then
+        echo "  skipped (macOS only)"
+        return
+    fi
+    mkdir -p "$SUBLIME_USER"
+    ln -sf "$DOTFILES/sublime/Preferences.sublime-settings" "$SUBLIME_USER/Preferences.sublime-settings"
+    ln -sf "$DOTFILES/sublime/One Dark.sublime-color-scheme" "$SUBLIME_USER/One Dark.sublime-color-scheme"
 }
 
 # Deep-merge base + overlay TOML: scalars/tables from the overlay win, arrays of
@@ -222,12 +236,30 @@ link_codex() {
     link_agent_skills "$HOME/.codex/skills"
 }
 
+# Agent-session tooling shared with the ~/main PM workspace (find-session.ts and
+# its SessionEnd hook). That repo isn't a dotfile, so this is a no-op when it
+# isn't checked out. Override the location with MAIN_WS.
+MAIN_WS="${MAIN_WS:-$HOME/main}"
+MAIN_WS_SCRIPTS=(find-session.ts hook-SessionEnd.sh)
+
+link_main() {
+    echo "Linking main workspace scripts..."
+    if [ ! -d "$MAIN_WS/scripts" ]; then
+        echo "  skipped ($MAIN_WS/scripts not found)"
+        return
+    fi
+    for f in "${MAIN_WS_SCRIPTS[@]}"; do
+        ln -sfn "$DOTFILES/scripts/$f" "$MAIN_WS/scripts/$f"
+    done
+}
+
 link_all() {
     link_zsh
     link_nvim
     if ! $MINIMAL; then
         link_ghostty
         link_zed
+        link_sublime
     fi
     link_herdr
     link_comview
@@ -236,6 +268,7 @@ link_all() {
     link_claude
     link_pi
     link_codex
+    link_main
 }
 
 # --- unlink ----------------------------------------------------------------
@@ -289,6 +322,13 @@ unlink_zed() {
     echo "Unlinking zed config..."
     rm_dot_symlink ~/.config/zed/settings.json
     rm_dot_symlink ~/.config/zed/keymap.json
+}
+
+unlink_sublime() {
+    echo "Unlinking sublime config..."
+    [[ "$OS" == "macos" ]] || return
+    rm_dot_symlink "$SUBLIME_USER/Preferences.sublime-settings"
+    rm_dot_symlink "$SUBLIME_USER/One Dark.sublime-color-scheme"
 }
 
 unlink_herdr() {
@@ -361,11 +401,19 @@ unlink_codex() {
     unlink_agent_skills "$HOME/.agents/skills"
 }
 
+unlink_main() {
+    echo "Unlinking main workspace scripts..."
+    for f in "${MAIN_WS_SCRIPTS[@]}"; do
+        rm_dot_symlink "$MAIN_WS/scripts/$f"
+    done
+}
+
 unlink_all() {
     unlink_zsh
     unlink_nvim
     unlink_ghostty
     unlink_zed
+    unlink_sublime
     unlink_herdr
     unlink_comview
     unlink_yazi
@@ -373,6 +421,7 @@ unlink_all() {
     unlink_claude
     unlink_pi
     unlink_codex
+    unlink_main
 }
 
 verb=link
