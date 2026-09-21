@@ -307,6 +307,10 @@ alias eqp='nvim ~/src/scripts/quick-prompt.md'
 ## macOS
 alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
 alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+display-layout() {
+  bun "$DOTFILES_ROOT/scripts/display-layout.ts" "$@"
+}
+alias dl='display-layout toggle'
 
 ## Navigation - Projects
 alias src="cd ~/src"
@@ -595,6 +599,50 @@ alias ga='git add'
 alias gaa='git add --all'
 alias gs='git-spice'
 alias rr='reset-repo'
+
+# Toggle dashboard demo-mode declutter patch (new badges, dev banner, dev panel gear)
+# Usage: demo-on [tag="label,position,color"] [role=true]
+#   position: tl/tr/bl/br (default tr); color: any CSS color (default orange)
+#   role=true auto-labels from the logged-in user's role (manager/spender) instead of `tag`'s
+#   label -- useful across two Chrome profiles against the same dev server. position/color from
+#   `tag` still apply; the label part of `tag` is ignored (e.g. tag=",bl,green" role=true).
+demo-on() {
+  local root
+  root=$(git rev-parse --show-toplevel) || return 1
+  git -C "$root" apply ~/.dashboard-demo-mode.patch || return 1
+  (cd "$root/product/dashboard" && pnpm relay-compiler) || return 1
+
+  unset DEMO_TAG_TEXT DEMO_TAG_POSITION DEMO_TAG_COLOR DEMO_TAG_ROLE
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      tag=*)
+        local val="${arg#tag=}"
+        local rest="${val#*,}"
+        [ "$rest" = "$val" ] && rest=""
+        local rest2="${rest#*,}"
+        [ "$rest2" = "$rest" ] && rest2=""
+
+        export DEMO_TAG_TEXT="${val%%,*}"
+        [ -n "$rest" ] && export DEMO_TAG_POSITION="${rest%%,*}"
+        [ -n "$rest2" ] && export DEMO_TAG_COLOR="$rest2"
+        ;;
+      role=*)
+        export DEMO_TAG_ROLE="${arg#role=}"
+        ;;
+    esac
+  done
+
+  echo "demo mode: on"
+}
+demo-off() {
+  local root
+  root=$(git rev-parse --show-toplevel) || return 1
+  git -C "$root" apply -R ~/.dashboard-demo-mode.patch || return 1
+  (cd "$root/product/dashboard" && pnpm relay-compiler) || return 1
+  unset DEMO_TAG_TEXT DEMO_TAG_POSITION DEMO_TAG_COLOR DEMO_TAG_ROLE
+  echo "demo mode: off"
+}
 
 # Push current branch (sets upstream if needed)
 unalias gp 2>/dev/null

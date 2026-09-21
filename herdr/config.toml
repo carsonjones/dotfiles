@@ -16,6 +16,7 @@ tabs = "alt"
 [theme]
 name = "one-dark"
 
+auto_switch = false
 [theme.custom]
 surface_dim = "#1f232a" # Selected sidebar row
 accent = "#61afef"      # Selection border and navigation accents

@@ -42,6 +42,9 @@ scripts/nvim-disable.sh --disable '3rd/image.nvim' # mutate nvim/lua/local.lua (
 
 scripts/unwrap.ts < wrapped.md                      # unwrap prose, preserve Markdown structure
 scripts/unwrap.ts -i notes.md                       # rewrite one or more files in place
+display-layout capture below                       # save current macOS display arrangement
+display-layout capture left                        # save the alternate arrangement
+dl                                                 # toggle between saved arrangements
 ```
 
 The picker (`scripts/dotfiles-install`) exposes update / clean / nvim-plugin toggling as top-level actions too.
