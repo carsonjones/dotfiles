@@ -21,7 +21,7 @@ Do **not** shortcut it. The doc is the only thing surviving this command.
 Hard gate. Do not proceed unless:
 
 - the file exists and is non-empty (`test -s <path>`)
-- front matter has `session_id` + `resume` — or you've confirmed neither resolved (herdr not running / no `agent_session`)
+- front matter has `session_id` + `resume` — or you've confirmed neither resolved (`$HERDR_PANE_ID` unset / no `agent_session`)
 - nothing is mid-flight: no uncommitted work the user expected you to finish, no background task still running, no unanswered question
 
 If any of that fails: **stop, don't close.** Report what's missing and let the user decide.
@@ -29,9 +29,12 @@ If any of that fails: **stop, don't close.** Report what's missing and let the u
 ## 3. Resolve pane + agent pid
 
 ```bash
-herdr pane current --current      # -> result.pane.pane_id
-herdr pane process-info --current # -> the `claude`/`codex` entry's pid in foreground_processes
+[ -n "$HERDR_PANE_ID" ] || { echo "not in a herdr pane"; exit 1; }
+herdr pane get "$HERDR_PANE_ID"                 # -> result.pane.pane_id
+herdr pane process-info --pane "$HERDR_PANE_ID" # -> the `claude`/`codex` entry's pid in foreground_processes
 ```
+
+`$HERDR_PANE_ID` is set by herdr in every pane. Unset → not in herdr; `--current` would return the *focused* pane (someone else's) — never fall back to it.
 
 Grab both. The pid is what tells the watcher the agent actually exited; the pane_id is what gets closed.
 
@@ -74,6 +77,6 @@ Then stop. No further tool calls, no trailing summary — anything after this ra
 
 ## Notes
 
-- Wrong pane is unrecoverable-ish: closing someone else's pane kills their work. Resolve with `--current`, never guess a `pane_id`.
-- No herdr? (`herdr pane current` fails) — write the handoff, print the path, tell the user to close the pane themselves. Never `kill` the shell as a substitute.
+- Wrong pane is unrecoverable-ish: closing someone else's pane kills their work. Resolve via `$HERDR_PANE_ID`, never `--current`, never guess a `pane_id`.
+- No herdr? (`$HERDR_PANE_ID` unset) — write the handoff, print the path, tell the user to close the pane themselves. Never `kill` the shell as a substitute.
 - Related: `/handoff` (doc only, session stays alive), `/herdr-pane` (relocate the pane instead of ending it).

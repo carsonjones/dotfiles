@@ -42,10 +42,10 @@ Fill `project`/`branch` from the cwd: `basename $(git rev-parse --show-toplevel)
 Resolve the agent + session id so the next reader can drop back into *this* conversation, not just read about it:
 
 ```bash
-herdr pane current --current | python3 -c 'import json,sys; s=json.load(sys.stdin)["result"]["pane"].get("agent_session") or {}; print(s.get("agent",""), s.get("value",""))'
+[ -n "$HERDR_PANE_ID" ] && herdr pane get "$HERDR_PANE_ID" | python3 -c 'import json,sys; s=json.load(sys.stdin)["result"]["pane"].get("agent_session") or {}; print(s.get("agent",""), s.get("value",""))'
 ```
 
-`herdr` is the terminal workspace manager the agent runs inside; it learns the id from its agent-integration hook, so this covers claude, codex, cursor, and friends. If herdr isn't running or the pane reports no `agent_session`, fall back to `$CLAUDE_CODE_SESSION_ID`. If neither resolves, **omit all three keys** — never invent an id.
+`herdr` is the terminal workspace manager the agent runs inside; it learns the id from its agent-integration hook, so this covers claude, codex, cursor, and friends. Only trust it when `$HERDR_PANE_ID` is set — herdr exports it into every pane. Never use `--current` here: outside a pane it returns whatever pane is *focused*, i.e. some other agent's session. No `$HERDR_PANE_ID` or no `agent_session` → fall back to `$CLAUDE_CODE_SESSION_ID`. If neither resolves, **omit all three keys** — never invent an id.
 
 `resume` command by agent:
 
