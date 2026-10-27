@@ -7,6 +7,7 @@ previous_agent = "shift+alt+["
 next_agent = "shift+alt+]"
 previous_tab = "alt+["
 next_tab = "alt+]"
+goto = ["prefix+g", "super+g"] # session navigator; jumps across machines too
 
 # Focus tab 1–9 in the active workspace with alt+1..9.
 [keys.indexed]

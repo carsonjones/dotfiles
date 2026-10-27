@@ -16,6 +16,8 @@ export PATH="\
 $HOME/bin:\
 $HOME/.local/bin:\
 $HOME/.bun/bin:\
+${HOMEBREW_PREFIX:-/opt/homebrew}/opt/rustup/bin:\
+$HOME/.cargo/bin:\
 $PATH:\
 /usr/local/bin:\
 /usr/bin:\
@@ -81,7 +83,16 @@ vf() {
     selected="$(fzf -q "$*")"
   fi
 
-  [[ -n "$selected" ]] && nvim --server "$NVIM" --remote-tab "$selected"
+  [[ -n "$selected" ]] && command nvim --server "$NVIM" --remote-tab "$selected"
+}
+
+# `nvim foo.md.` (stray trailing dot, no such file) -> fuzzy search instead
+nvim() {
+  if (( $# == 1 )) && [[ "$1" == *. && ! -e "$1" ]]; then
+    vf "${1%.}"
+  else
+    command nvim "$@"
+  fi
 }
 
 unalias scratch 2>/dev/null
@@ -420,7 +431,7 @@ codex() {
   # root, (N) makes a non-match expand to nothing instead of erroring.
   local -a vendored
   vendored=("${cli_bin:A:h:h}"/node_modules/@openai/codex-linux-*/vendor/*/codex-resources(N))
-  local PATH="$PATH"
+  local -x PATH="$PATH"
   if (( $#vendored )) && [[ -x ${vendored[1]}/bwrap ]]; then
     PATH="${vendored[1]}:$PATH"
   fi
@@ -428,7 +439,6 @@ codex() {
   command "$cli_bin" \
     -c 'notify=[]' \
     -c 'mcp_servers.node_repl.enabled=false' \
-    -c 'mcp_servers.computer-use.enabled=false' \
     "$@"
 }
 

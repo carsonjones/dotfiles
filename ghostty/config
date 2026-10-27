@@ -31,5 +31,8 @@ keybind = cmd+backspace=esc:W
 # "jump to bottom". Send the literal ctrl+End CSI sequence on cmd+down.
 keybind = cmd+down=text:\x1b[1;5F
 
+# cmd+g → herdr session navigator (goto) instead of ghostty's next-search-result
+keybind = cmd+g=unbind
+
 # per-machine overrides, gitignored (*.local). ? = ok if missing
 config-file = ?config.local

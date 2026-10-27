@@ -346,7 +346,6 @@ fi
 # step above since it needs ~/.config/herdr/plugins symlinked into the repo first.
 HERDR_PLUGINS=(
     cloudmanic/herdr-plus
-    thanhdat77/herdr-picker-plus
     JanTvrdik/herdr-command-palette
     carsonjones/herdr-agent-dashboard
     iurysza/termscope

@@ -32,6 +32,7 @@ import datetime as _dt
 import json
 import os
 import random
+import re
 import subprocess
 import sys
 import time
@@ -221,6 +222,18 @@ def dedup_key(rec: dict):
     return ("plb", rec.get("path"), rec.get("line"), (rec.get("body") or "").strip())
 
 
+def archived_hunk_keys(root: str) -> set:
+    """Hunk ids already archived (cleared) for this repo. Hunk keeps notes live
+    for the whole session, so without this every clear lets `watch` re-import
+    the same note under a fresh id and re-dispatch it."""
+    pat = re.compile(re.escape(slug_of(root)) + r"-\d{8}T\d{6}\.jsonl")
+    keys = set()
+    for f in (DIR / "archive").glob("*.jsonl"):
+        if pat.fullmatch(f.name):
+            keys |= {("hid", r["hunk_id"]) for r in load(f) if r.get("hunk_id")}
+    return keys
+
+
 def _collect_new(root: str, note_type: str) -> tuple[list[dict], int, int] | None:
     """Fresh (not-yet-queued) records for this repo, plus mapped/unmapped counts.
     None when no live session exists."""
@@ -230,6 +243,7 @@ def _collect_new(root: str, note_type: str) -> tuple[list[dict], int, int] | Non
     mapped = [r for r in (to_record(n, root) for n in notes) if r]
     unmapped = len(notes) - len(mapped)
     existing = {dedup_key(r) for r in load(queue_path(root))}
+    existing |= archived_hunk_keys(root)
     fresh = [r for r in mapped if dedup_key(r) not in existing]
     return fresh, len(mapped), unmapped
 
